@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("rsc_token") || sessionStorage.getItem("rsc_token");
-    if (!token) router.replace("/login");
+ 
 
     // Fetch computers from the DB via the API; fall back to localStorage on error
     (async () => {

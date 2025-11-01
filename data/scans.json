@@ -25,5 +25,36 @@
     "createdAt": "2025-11-01T17:42:16.456Z",
     "status": "pending",
     "id": "scan_1762018936456"
+  },
+  "scan_1762024185622": {
+    "Brand": "HP",
+    "Model": "HP EliteBook 840 G5",
+    "CPU": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz",
+    "Cores": "4",
+    "Threads": "8",
+    "BaseSpeed_MHz": "2112",
+    "RAM_GB": "16",
+    "RAM_Speed_MHz": "2400",
+    "RAM_Type": "DDR4",
+    "Storage": [
+      {
+        "Model": "M.2 512G",
+        "Size_GB": 512.11,
+        "Type": "SSD",
+        "BusType": "SATA"
+      }
+    ],
+    "GPU": "Intel(R) UHD Graphics 620",
+    "Display_Resolution": "1920x1080",
+    "Screen_Size_inch": 15.6,
+    "OS": "Microsoft Windows 11 Pro",
+    "Scan_Time": "2025-11-01T19:09:45.622Z",
+    "createdAt": "2025-11-01T19:09:45.622Z",
+    "status": "published",
+    "id": "scan_1762024185622",
+    "title": "HP HP EliteBook 840 G5",
+    "price": 20000,
+    "condition": "Used",
+    "publishedAt": "2025-11-01T19:14:53.346Z"
   }
 }

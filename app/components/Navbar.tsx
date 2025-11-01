@@ -55,12 +55,12 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className={`sticky top-0 z-50 border-b p-2 transition-all duration-500 ${
+    <nav className={`sticky top-0 relative z-50 border-b p-2 transition-all duration-500 ${
       isScrolled 
         ? "bg-white/95 backdrop-blur-xl shadow-lg border-slate-200/80" 
         : "bg-white/80 backdrop-blur-lg shadow-sm border-slate-200"
     }`}>
-      <div className="mx-auto w-full  flex items-center justify-between px-4 h-16">
+      <div className="mx-auto w-full flex items-center justify-between px-4 h-16">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-xl bg-black  text-white flex items-center justify-center font-semibold text-sm shadow-sm transition-transform duration-300 hover:scale-105">
             <i className="fa-solid fa-desktop text-xs"></i>
@@ -102,8 +102,8 @@ export default function Navbar() {
       </div>
       <div
         ref={mobileMenuRef}
-        className={`md:hidden overflow-hidden transition-all duration-500 ease-out bg-white/95 backdrop-blur-xl border-t border-slate-200 ${
-          isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        className={`md:hidden absolute left-0 right-0 top-full z-50 transition-all duration-300 ease-out bg-white/95 backdrop-blur-xl border-b border-slate-200 shadow-xl ${
+          isOpen ? "opacity-100 pointer-events-auto translate-y-0" : "opacity-0 pointer-events-none -translate-y-2"
         }`}
       >
         <div className="flex flex-col gap-1 px-4 py-3">
