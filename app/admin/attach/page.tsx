@@ -145,6 +145,8 @@ export default function AttachListing() {
           };
 
           setFormData(newFormData);
+          // Auto-fill listing title from scanned data
+          setTitle([scanData.Brand, scanData.Model].filter(Boolean).join(' ').trim());
           console.log('✅ Form data updated with scan data');
 
           setDebugInfo(prev => ({
@@ -193,6 +195,8 @@ export default function AttachListing() {
               description: ''
             };
             setFormData(newFormData);
+            // Auto-fill listing title from latest scan
+            setTitle([scanData.Brand, scanData.Model].filter(Boolean).join(' ').trim());
           } else {
             setWaitingForScan(true);
             setScannerData(null);
@@ -219,6 +223,7 @@ export default function AttachListing() {
             price: '',
             description: ''
           });
+          setTitle('');
         } else {
           // Other errors: show error message, do not populate mock data
           setScannerData(null);
@@ -259,7 +264,7 @@ export default function AttachListing() {
   const [guaranteeProvider, setGuaranteeProvider] =
     useState<string>("PCSmartSpec");
   const [title, setTitle] = useState<string>("");
-  const [price, setPrice] = useState<number | string>(799);
+  const [price, setPrice] = useState<number | string>("00000");
   const [condition, setCondition] = useState<string>("New");
   const [specialFeatures, setSpecialFeatures] = useState<string[]>([]);
   const [specialInput, setSpecialInput] = useState<string>("");
@@ -420,26 +425,26 @@ export default function AttachListing() {
           <div className="rounded-xl border bg-white p-4 lg:col-span-2 xl:col-span-2">
             <div className="text-sm text-zinc-500">Model</div>
             <div className="text-lg font-semibold truncate sm:whitespace-normal sm:overflow-visible sm:text-clip">
-              {scannerData?.Model || 'N/A'}
+              {scannerData?.Model || (waitingForScan ? 'Waiting…' : 'N/A')}
             </div>
           </div>
           <div className="rounded-xl border bg-white p-4">
             <div className="text-sm text-zinc-500">CPU / RAM</div>
             <div className="text-lg font-semibold">
-              {scannerData?.CPU?.split(" ")[0] || 'N/A'} · {ramSummary}
+              {(scannerData?.CPU?.split(" ")[0]) || (waitingForScan ? 'Waiting…' : 'N/A')} · {(scannerData ? ramSummary : (waitingForScan ? 'Waiting…' : 'N/A'))}
             </div>
           </div>
           <div className="rounded-xl border bg-white p-4">
             <div className="text-sm text-zinc-500">Storage Total</div>
             <div className="text-lg font-semibold">
-              {totalStorageGB ? `${totalStorageGB.toFixed(0)} GB` : 'N/A'}
+              {totalStorageGB ? `${totalStorageGB.toFixed(0)} GB` : (waitingForScan ? 'Waiting…' : 'N/A')}
               {storageKinds ? ` · ${storageKinds}` : ""}
             </div>
           </div>
           <div className="rounded-xl border bg-white p-4">
             <div className="text-sm text-zinc-500">Scan Time</div>
             <div className="text-lg font-semibold">
-              {scannerData?.Scan_Time ? formatScanTime(scannerData.Scan_Time) : 'N/A'}
+              {scannerData?.Scan_Time ? formatScanTime(scannerData.Scan_Time) : (waitingForScan ? 'Waiting…' : 'N/A')}
             </div>
           </div>
         </section>

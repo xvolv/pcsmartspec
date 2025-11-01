@@ -1,29 +1,35 @@
 {
-  "scan_1762010912876": {
+  "scan_1762012851663": {
     "Brand": "HP",
-    "Model": "Victus by HP Gaming Laptop 15-fa1xxx",
-    "CPU": "13th Gen Intel(R) Core(TM) i5-13420H",
-    "Cores": "8",
-    "Threads": "12",
-    "BaseSpeed_MHz": "2100",
+    "Model": "HP EliteBook 840 G3",
+    "CPU": "Intel(R) Core(TM) i5-6300U CPU @ 2.40GHz",
+    "Cores": "2",
+    "Threads": "4",
+    "BaseSpeed_MHz": "2496",
     "RAM_GB": "16",
-    "RAM_Speed_MHz": "3200",
+    "RAM_Speed_MHz": "2133",
     "RAM_Type": "DDR4",
     "Storage": [
       {
-        "Model": "PSENN512GA87FC0",
-        "Size_GB": 512.11,
+        "Model": "APPLE HDD ST1000LM024",
+        "Size_GB": 1000.2,
+        "Type": "HDD",
+        "BusType": "SATA"
+      },
+      {
+        "Model": "KINGSTON OM8PDP3128B-A01",
+        "Size_GB": 128.04,
         "Type": "SSD",
         "BusType": "NVMe"
       }
     ],
-    "GPU": "Intel(R) UHD Graphics, NVIDIA GeForce RTX 2050",
-    "Display_Resolution": "1920x1080",
-    "Screen_Size_inch": 15.6,
-    "OS": "Microsoft Windows 11 Home",
-    "Scan_Time": "2025-11-01T15:28:32.876Z",
-    "createdAt": "2025-11-01T15:28:32.876Z",
+    "GPU": "spacedesk Graphics Adapter, Intel(R) HD Graphics 520",
+    "Display_Resolution": "1280x800",
+    "Screen_Size_inch": 10.7,
+    "OS": "Microsoft Windows 11 Pro",
+    "Scan_Time": "2025-11-01T16:00:51.664Z",
+    "createdAt": "2025-11-01T16:00:51.664Z",
     "status": "pending",
-    "id": "scan_1762010912876"
+    "id": "scan_1762012851663"
   }
 }
