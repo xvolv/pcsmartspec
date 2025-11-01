@@ -68,8 +68,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<"all" | "sold" | "unsold">("all");
   const [items, setItems] = useState<Computer[]>(initialItems);
+  const [brandFilter, setBrandFilter] = useState<string>("");
+  const [priceFilter, setPriceFilter] = useState<string>("");
   const [orders, setOrders] = useState<Order[]>([]);
   const [sellId, setSellId] = useState<string | null>(null);
   const [buyerName, setBuyerName] = useState("");
@@ -179,13 +180,20 @@ export default function DashboardPage() {
   }, [searchParams]);
 
   const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const b = brandFilter.trim().toLowerCase();
+    const exact = priceFilter !== "" ? Number(priceFilter) : undefined;
+
     return items.filter((i) => {
-      const matchesQuery = i.name.toLowerCase().includes(query.toLowerCase());
-      const matchesStatus =
-        status === "all" || (status === "sold" ? i.sold : !i.sold);
-      return matchesQuery && matchesStatus;
+      const name = i.name?.toLowerCase() || "";
+      const spec = i.specs?.toLowerCase() || "";
+      const matchesQuery = q ? name.includes(q) || spec.includes(q) : true;
+      const matchesBrand = b ? name.includes(b) || spec.includes(b) : true;
+      const price = Number(i.price) || 0;
+      const matchesExact = typeof exact === "number" ? price === exact : true;
+      return matchesQuery && matchesBrand && matchesExact;
     });
-  }, [items, query, status]);
+  }, [items, query, brandFilter, priceFilter]);
 
   function updateItem(id: string, patch: Partial<Computer>) {
     setItems((prev) =>
@@ -410,25 +418,20 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="md:col-span-3">
+            <div className="md:col-span-2">
               <div className="relative">
-                <select
-                  value={status}
-                  onChange={(e) =>
-                    setStatus(e.target.value as "all" | "sold" | "unsold")
-                  }
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 pr-11 text-slate-700 appearance-none transition-all duration-200 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 outline-none cursor-pointer"
-                >
-                  <option value="all">All</option>
-                  <option value="sold">Sold</option>
-                  <option value="unsold">Available</option>
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                  <i className="fa-solid fa-chevron-down text-sm" />
+                <input
+                  placeholder="Brand (e.g., Acer)"
+                  value={brandFilter}
+                  onChange={(e) => setBrandFilter(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 text-slate-700 transition-all duration-200 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 outline-none"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <i className="fa-regular fa-tag" />
                 </div>
-              </div>
             </div>
           </div>
+        </div>
         </section>
 
         {/* Devices Section */}

@@ -42,6 +42,23 @@ export default function NewComputerModal({
   const [series, setSeries] = useState<string>("");
   const [condition, setCondition] = useState<string>("");
 
+  // Quick gaming spec (compact fields)
+  const [gCpu, setGCpu] = useState<string>(""); // e.g., Intel core Ultra 9 (i9-14900HX)
+  const [gGen, setGGen] = useState<string>(""); // e.g., 14th Generation
+  const [gCores, setGCores] = useState<string>(""); // e.g., 24
+  const [gThreads, setGThreads] = useState<string>(""); // e.g., 32
+  const [gBoost, setGBoost] = useState<string>(""); // e.g., 5.4
+  const [gStorage, setGStorage] = useState<string>(""); // e.g., 1TB SSD
+  const [gRamAmount, setGRamAmount] = useState<string>(""); // e.g., 16GB
+  const [gRamType, setGRamType] = useState<string>(""); // e.g., DDR6 / DDR5
+  const [gRamSpeed, setGRamSpeed] = useState<string>(""); // e.g., 6400
+  const [gScreenSize, setGScreenSize] = useState<string>(""); // e.g., 16
+  const [gResolution, setGResolution] = useState<string>(""); // e.g., WUXGA 2K
+  const [gRefresh, setGRefresh] = useState<string>(""); // e.g., 240
+  const [gBacklight, setGBacklight] = useState<boolean>(false);
+  const [gBattery, setGBattery] = useState<string>("");
+  const [gGpu, setGGpu] = useState<string>(""); // e.g., NVIDIA GeForce RTX 5070 8GB
+
   // CPU
   const [cpuBrand, setCpuBrand] = useState<string>("");
   const [cpuSeries, setCpuSeries] = useState<string>("");
@@ -89,6 +106,28 @@ export default function NewComputerModal({
   };
 
   const buildSpecsString = (s: SpecsState) => {
+    // If quick gaming fields are used, format a compact, emoji-rich spec post
+    const usingQuick = [gCpu, gGen, gStorage, gRamAmount, gScreenSize, gResolution, gRefresh, gGpu].some(Boolean);
+    if (usingQuick) {
+      const lines = [
+        `${uSpecs.brand}${series ? ` ${series}` : ""}${model ? ` ${model}` : ""}`.trim(),
+        "",
+        "🔱GAMING LAPTOP",
+        gCpu && `\n⚜️${gCpu}`,
+        gGen && `\n❇️${gGen}`,
+        (gCores || gThreads) && `\n🔰Total Cores ${gCores || "?"}; Total Threads ${gThreads || "?"}`,
+        gBoost && `\n❇️Up to ${gBoost}Ghz processor speed`,
+        gStorage && `\n💠${gStorage}  storage`,
+        (gRamAmount || gRamType || gRamSpeed) && `\n💠${gRamAmount || ""} RAM ${gRamType || ""}${gRamSpeed ? `(${gRamSpeed}mhz)` : ""}`.trim(),
+        gScreenSize && `\n💻${gScreenSize}\" inch screen`,
+        gResolution && `\n💻 WUXGA (Wide Ultra XGA)  screen resolution  ${gResolution}`,
+        gRefresh && `\n👉${gRefresh}Hz refresh rate`,
+        gBacklight ? "\n🔆  keyboard Backlight" : "",
+        gBattery && `\n\n🔋${gBattery}🔋`,
+        gGpu && `\n\n❇️ ${gGpu} GPU Dedicated GRAPHICS`,
+      ].filter(Boolean);
+      return lines.join("");
+    }
     const cpuSummary = [cpuBrand, cpuSeries, cpuGeneration, cpuModel].filter(Boolean).join(" ");
     const memSummary = [ramType && `RAM Type: ${ramType}`, ramCapacity && `RAM: ${ramCapacity}`].filter(Boolean).join(" | ");
     const storageSummary = [
@@ -288,20 +327,27 @@ export default function NewComputerModal({
 
   async function handleGeneratePost() {
     const title = [uSpecs.brand, series, model].filter(Boolean).join(" ");
-    const parts = [
-      `Condition: ${condition || "—"}`,
-      cpuBrand && `CPU: ${[cpuBrand, cpuSeries, cpuGeneration, cpuModel].filter(Boolean).join(" ")}`,
-      (ramType || ramCapacity) && `Memory: ${[ramType, ramCapacity].filter(Boolean).join(" ")}`,
-      (storageTypeMain || storageSubtype || storageCapacity) && `Storage: ${[storageTypeMain, storageSubtype, storageCapacity].filter(Boolean).join(" ")}`,
-      (screenSize || resolution || displayTech || refreshRate) && `Display: ${[screenSize, resolution, displayTech, refreshRate].filter(Boolean).join(" • ")}`,
-      (gpuType || gpuBrand || gpuSeries || gpuModel) && `Graphics: ${[gpuType, gpuBrand, gpuSeries, gpuModel].filter(Boolean).join(" ")}`,
-      warranty && `Warranty: ${warranty}`,
-      additionalSpecs && `Notes: ${additionalSpecs}`,
-      `Price: ${uPrice ? `${uPrice} Birr` : "—"}`,
-      phoneNumber && `Phone: ${phoneNumber}`,
-      telegram && `Telegram: ${telegram}`,
-    ].filter(Boolean);
-    const post = `📦 ${title || "Laptop"}\n\n${parts.join("\n")}`;
+    let post: string;
+    const usingQuick = [gCpu, gGen, gStorage, gRamAmount, gScreenSize, gResolution, gRefresh, gGpu].some(Boolean);
+    if (usingQuick) {
+      const quick = buildSpecsString(uSpecs);
+      post = quick || title || "Laptop";
+    } else {
+      const parts = [
+        `Condition: ${condition || "—"}`,
+        cpuBrand && `CPU: ${[cpuBrand, cpuSeries, cpuGeneration, cpuModel].filter(Boolean).join(" ")}`,
+        (ramType || ramCapacity) && `Memory: ${[ramType, ramCapacity].filter(Boolean).join(" ")}`,
+        (storageTypeMain || storageSubtype || storageCapacity) && `Storage: ${[storageTypeMain, storageSubtype, storageCapacity].filter(Boolean).join(" ")}`,
+        (screenSize || resolution || displayTech || refreshRate) && `Display: ${[screenSize, resolution, displayTech, refreshRate].filter(Boolean).join(" • ")}`,
+        (gpuType || gpuBrand || gpuSeries || gpuModel) && `Graphics: ${[gpuType, gpuBrand, gpuSeries, gpuModel].filter(Boolean).join(" ")}`,
+        warranty && `Warranty: ${warranty}`,
+        additionalSpecs && `Notes: ${additionalSpecs}`,
+        `Price: ${uPrice ? `${uPrice} Birr` : "—"}`,
+        phoneNumber && `Phone: ${phoneNumber}`,
+        telegram && `Telegram: ${telegram}`,
+      ].filter(Boolean);
+      post = `📦 ${title || "Laptop"}\n\n${parts.join("\n")}`;
+    }
     try {
       await navigator.clipboard.writeText(post);
       alert("Post copied to clipboard");
@@ -319,6 +365,90 @@ export default function NewComputerModal({
           <button className="  transition-colors duration-200 hover:cursor-pointer" onClick={onClose}>
             <i className="fa-solid fa-xmark text-xl" />
           </button>
+        </div>
+        {/* Gaming Spec (Quick) */}
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 mb-4">
+          <div className="mb-2 text-sm font-semibold text-slate-700">Gaming Spec (Quick)</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">CPU (e.g. Intel core Ultra 9 (i9-14900HX))</label>
+              <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gCpu} onChange={(e)=>setGCpu(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Generation</label>
+              <select className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gGen} onChange={(e)=>setGGen(e.target.value)}>
+                <option value="">Select</option>
+                <option>14th Generation</option>
+                <option>13th Generation</option>
+                <option>12th Generation</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Total Cores</label>
+              <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gCores} onChange={(e)=>setGCores(e.target.value)} placeholder="24" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Total Threads</label>
+              <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gThreads} onChange={(e)=>setGThreads(e.target.value)} placeholder="32" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Max Boost (GHz)</label>
+              <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gBoost} onChange={(e)=>setGBoost(e.target.value)} placeholder="5.4" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Storage</label>
+              <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gStorage} onChange={(e)=>setGStorage(e.target.value)} placeholder="1TB SSD" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">RAM</label>
+              <div className="grid grid-cols-3 gap-2">
+                <input className="rounded-xl border border-slate-300 bg-white px-3 py-2" value={gRamAmount} onChange={(e)=>setGRamAmount(e.target.value)} placeholder="16GB" />
+                <select className="rounded-xl border border-slate-300 bg-white px-3 py-2" value={gRamType} onChange={(e)=>setGRamType(e.target.value)}>
+                  <option value="">Type</option>
+                  <option>DDR6</option>
+                  <option>DDR5</option>
+                  <option>DDR4</option>
+                </select>
+                <input className="rounded-xl border border-slate-300 bg-white px-3 py-2" value={gRamSpeed} onChange={(e)=>setGRamSpeed(e.target.value)} placeholder="6400" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Screen Size (inches)</label>
+              <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gScreenSize} onChange={(e)=>setGScreenSize(e.target.value)} placeholder="16" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Resolution</label>
+              <select className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gResolution} onChange={(e)=>setGResolution(e.target.value)}>
+                <option value="">Select</option>
+                <option>2K</option>
+                <option>WUXGA 2K</option>
+                <option>1920x1080</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Refresh Rate (Hz)</label>
+              <select className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gRefresh} onChange={(e)=>setGRefresh(e.target.value)}>
+                <option value="">Select</option>
+                <option>240</option>
+                <option>165</option>
+                <option>144</option>
+                <option>120</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <input id="g-backlight" type="checkbox" checked={gBacklight} onChange={(e)=>setGBacklight(e.target.checked)} className="rounded" />
+              <label htmlFor="g-backlight" className="text-sm text-slate-700">Keyboard Backlight</label>
+            </div>
+            <div className="space-y-1 md:col-span-2">
+              <label className="text-xs text-slate-600">Battery Note</label>
+              <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gBattery} onChange={(e)=>setGBattery(e.target.value)} />
+            </div>
+            <div className="space-y-1 md:col-span-2">
+              <label className="text-xs text-slate-600">GPU</label>
+              <input className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={gGpu} onChange={(e)=>setGGpu(e.target.value)} placeholder="NVIDIA GeForce RTX 5070 8GB" />
+            </div>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-500">Fill these for a quick gaming listing. The Generate Post button will use this format.</div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="space-y-2">
@@ -398,6 +528,329 @@ export default function NewComputerModal({
                 ) : null
               }
             </select>
+          </div>
+
+          {/* Condition */}
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm font-medium text-slate-700">Condition</label>
+            <select
+              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+              value={condition}
+              onChange={(e) => setCondition(e.target.value)}
+            >
+              <option value="">Select Condition</option>
+              <option value="New">New</option>
+              <option value="Like New">Like New</option>
+              <option value="Used">Used</option>
+              <option value="Refurbished">Refurbished</option>
+            </select>
+          </div>
+
+          {/* CPU Section */}
+          <div className="md:col-span-2">
+            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">CPU</div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Brand</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={cpuBrand}
+                  onChange={(e) => {
+                    setCpuBrand(e.target.value);
+                    setCpuSeries("");
+                    setCpuGeneration("");
+                    setCpuModel("");
+                  }}
+                >
+                  <option value="">Select</option>
+                  {Object.keys(cpuSeriesByBrand).map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Series</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={cpuSeries}
+                  onChange={(e) => {
+                    setCpuSeries(e.target.value);
+                    setCpuGeneration("");
+                    setCpuModel("");
+                  }}
+                  disabled={!cpuBrand}
+                >
+                  <option value="">Select</option>
+                  {(cpuBrand ? cpuSeriesByBrand[cpuBrand] : []).map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Generation</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={cpuGeneration}
+                  onChange={(e) => {
+                    setCpuGeneration(e.target.value);
+                    setCpuModel("");
+                  }}
+                  disabled={!cpuSeries}
+                >
+                  <option value="">Select</option>
+                  {(cpuSeries ? cpuGenBySeries[cpuSeries] : []).map((g) => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Model</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={cpuModel}
+                  onChange={(e) => setCpuModel(e.target.value)}
+                  disabled={!cpuGeneration}
+                >
+                  <option value="">Select</option>
+                  {(cpuGeneration ? cpuModelsByGen[cpuGeneration] : []).map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Memory Section */}
+          <div className="md:col-span-2">
+            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Memory</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">RAM Type</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={ramType}
+                  onChange={(e) => { setRamType(e.target.value); setRamCapacity(""); }}
+                >
+                  <option value="">Select</option>
+                  {Object.keys(ramCapByType).map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Capacity</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={ramCapacity}
+                  onChange={(e) => setRamCapacity(e.target.value)}
+                  disabled={!ramType}
+                >
+                  <option value="">Select</option>
+                  {(ramType ? ramCapByType[ramType] : []).map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Storage Section */}
+          <div className="md:col-span-2">
+            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Storage</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Type</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={storageTypeMain}
+                  onChange={(e) => { setStorageTypeMain(e.target.value); setStorageSubtype(""); setStorageCapacity(""); }}
+                >
+                  <option value="">Select</option>
+                  {Object.keys(storageSubtypeByType).map((t) => (
+                    <option key={t} value={t}>{t.toUpperCase()}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Sub-type</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={storageSubtype}
+                  onChange={(e) => { setStorageSubtype(e.target.value); setStorageCapacity(""); }}
+                  disabled={!storageTypeMain}
+                >
+                  <option value="">Select</option>
+                  {(storageTypeMain ? storageSubtypeByType[storageTypeMain as keyof typeof storageSubtypeByType] : []).map((st) => (
+                    <option key={st} value={st}>{st}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Capacity</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={storageCapacity}
+                  onChange={(e) => setStorageCapacity(e.target.value)}
+                  disabled={!storageSubtype}
+                >
+                  <option value="">Select</option>
+                  {(storageSubtype ? storageCapBySubtype[storageSubtype as keyof typeof storageCapBySubtype] : []).map((cap) => (
+                    <option key={cap} value={cap}>{cap}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Display Section */}
+          <div className="md:col-span-2">
+            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Display</div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Screen Size</label>
+                <input
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={screenSize}
+                  onChange={(e) => setScreenSize(e.target.value)}
+                  placeholder='e.g. 15.6"'
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Resolution</label>
+                <input
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={resolution}
+                  onChange={(e) => setResolution(e.target.value)}
+                  placeholder="e.g. 1920x1080"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Panel Tech</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={displayTech}
+                  onChange={(e) => setDisplayTech(e.target.value)}
+                >
+                  <option value="">Select</option>
+                  {['IPS','TN','VA','OLED','Mini‑LED'].map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Refresh Rate</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={refreshRate}
+                  onChange={(e) => setRefreshRate(e.target.value)}
+                >
+                  <option value="">Select</option>
+                  {['60Hz','90Hz','120Hz','144Hz','165Hz','240Hz'].map((hz) => (
+                    <option key={hz} value={hz}>{hz}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* GPU Section */}
+          <div className="md:col-span-2">
+            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Graphics</div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Type</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={gpuType}
+                  onChange={(e) => { setGpuType(e.target.value); setGpuBrand(""); setGpuSeries(""); setGpuModel(""); }}
+                >
+                  <option value="">Select</option>
+                  {Object.keys(gpuBrandByType).map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Brand</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={gpuBrand}
+                  onChange={(e) => { setGpuBrand(e.target.value); setGpuSeries(""); setGpuModel(""); }}
+                  disabled={!gpuType}
+                >
+                  <option value="">Select</option>
+                  {(gpuType ? gpuBrandByType[gpuType] : []).map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Series</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={gpuSeries}
+                  onChange={(e) => { setGpuSeries(e.target.value); setGpuModel(""); }}
+                  disabled={!gpuBrand}
+                >
+                  <option value="">Select</option>
+                  {(gpuBrand ? gpuSeriesByBrand[gpuBrand] : []).map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Model</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={gpuModel}
+                  onChange={(e) => setGpuModel(e.target.value)}
+                  disabled={!gpuSeries}
+                >
+                  <option value="">Select</option>
+                  {(gpuSeries ? gpuModelsBySeries[gpuSeries] : []).map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Warranty & Contact */}
+          <div className="md:col-span-2">
+            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Warranty & Contact</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Warranty</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={warranty}
+                  onChange={(e) => setWarranty(e.target.value)}
+                >
+                  <option value="">Select</option>
+                  {warrantyOptions.map((w) => (
+                    <option key={w} value={w}>{w}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Phone</label>
+                <input
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="09…"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">Telegram</label>
+                <input
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={telegram}
+                  onChange={(e) => setTelegram(e.target.value)}
+                  placeholder="@username"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Other specs */}
