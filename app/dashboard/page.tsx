@@ -2,10 +2,18 @@
 
 import Head from "next/head";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChangeEvent, ChangeEventHandler, useEffect, useMemo, useState } from "react";
+import {
+  ChangeEvent,
+  ChangeEventHandler,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import NewComputerModal, { type NewComputerData } from "../components/NewComputerModal";
+import NewComputerModal, {
+  type NewComputerData,
+} from "../components/NewComputerModal";
 
 type Computer = {
   id: string;
@@ -72,7 +80,7 @@ export default function DashboardPage() {
   const [warrantyMonths, setWarrantyMonths] = useState<number>(12);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uName, setUName] = useState("");
-  const [uPrice, setUPrice] = useState<string|number>("");
+  const [uPrice, setUPrice] = useState<string | number>("");
   const [uNegotiable, setUNegotiable] = useState(true);
   const [uSpecs, setUSpecs] = useState({
     brand: "",
@@ -82,30 +90,33 @@ export default function DashboardPage() {
     processor: "",
   });
   const [uImages, setUImages] = useState<string[]>([]);
-  const [uFiles, setUFiles] = useState<File[]>([]);  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [uFiles, setUFiles] = useState<File[]>([]);
+  const [editingItem, setEditingItem] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("rsc_token") || sessionStorage.getItem("rsc_token");
- 
+    const token =
+      localStorage.getItem("rsc_token") || sessionStorage.getItem("rsc_token");
 
     // Fetch computers from the DB via the API; fall back to localStorage on error
     (async () => {
       try {
-        const res = await fetch('/api/computers');
+        const res = await fetch("/api/computers");
         if (res.ok) {
           const json = await res.json();
           const comps = json.computers || [];
           const mapped: Computer[] = comps.map((c: any) => ({
             id: c.id,
-            name: c.name || c.fileName || 'Unnamed',
+            name: c.name || c.fileName || "Unnamed",
             price: 0,
             negotiable: false,
-            sold: typeof c.count === 'number' ? c.count === 0 : false,
+            sold: typeof c.count === "number" ? c.count === 0 : false,
             specs: undefined,
             images: c.fileName ? [`/uploads/${c.fileName}`] : [],
           }));
           setItems(mapped);
-          try { localStorage.setItem('rsc_items', JSON.stringify(mapped)); } catch {}
+          try {
+            localStorage.setItem("rsc_items", JSON.stringify(mapped));
+          } catch {}
           return;
         }
       } catch (err) {
@@ -114,14 +125,16 @@ export default function DashboardPage() {
 
       const savedItems = localStorage.getItem("rsc_items");
       if (savedItems) {
-        try { setItems(JSON.parse(savedItems)); } catch {}
+        try {
+          setItems(JSON.parse(savedItems));
+        } catch {}
       }
     })();
 
     // Fetch sold orders from DB
     (async () => {
       try {
-        const res = await fetch('/api/sold');
+        const res = await fetch("/api/sold");
         if (res.ok) {
           const json = await res.json();
           const solds = json.solds || [];
@@ -131,11 +144,13 @@ export default function DashboardPage() {
             phone: s.phoneNumber,
             model: s.computerModel,
             price: s.salesPrice || 0,
-            specs: s.specifications || '',
-            warrantyMonths: parseInt(s.warranty || '', 10) || 0,
+            specs: s.specifications || "",
+            warrantyMonths: parseInt(s.warranty || "", 10) || 0,
           }));
           setOrders(mappedOrders);
-          try { localStorage.setItem('rsc_orders', JSON.stringify(mappedOrders)); } catch {}
+          try {
+            localStorage.setItem("rsc_orders", JSON.stringify(mappedOrders));
+          } catch {}
           return;
         }
       } catch (err) {
@@ -144,7 +159,9 @@ export default function DashboardPage() {
 
       const savedOrders = localStorage.getItem("rsc_orders");
       if (savedOrders) {
-        try { setOrders(JSON.parse(savedOrders)); } catch {}
+        try {
+          setOrders(JSON.parse(savedOrders));
+        } catch {}
       }
     })();
   }, [router]);
@@ -164,28 +181,33 @@ export default function DashboardPage() {
   const filtered = useMemo(() => {
     return items.filter((i) => {
       const matchesQuery = i.name.toLowerCase().includes(query.toLowerCase());
-      const matchesStatus = status === "all" || (status === "sold" ? i.sold : !i.sold);
+      const matchesStatus =
+        status === "all" || (status === "sold" ? i.sold : !i.sold);
       return matchesQuery && matchesStatus;
     });
   }, [items, query, status]);
 
   function updateItem(id: string, patch: Partial<Computer>) {
-    setItems((prev) => prev.map((i) => 
-      i.id === id ? { ...i, ...patch, hasUnsavedChanges: true } : i
-    ));
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === id ? { ...i, ...patch, hasUnsavedChanges: true } : i
+      )
+    );
   }
 
   function saveChanges(id: string) {
-    setItems((prev) => prev.map((i) => 
-      i.id === id ? { ...i, hasUnsavedChanges: false } : i
-    ));
+    setItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, hasUnsavedChanges: false } : i))
+    );
     setEditingItem(null);
   }
 
   function cancelChanges(id: string, originalItem: Computer) {
-    setItems((prev) => prev.map((i) => 
-      i.id === id ? { ...originalItem, hasUnsavedChanges: false } : i
-    ));
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === id ? { ...originalItem, hasUnsavedChanges: false } : i
+      )
+    );
     setEditingItem(null);
   }
   function handleAddFromModal(data: NewComputerData) {
@@ -205,27 +227,32 @@ export default function DashboardPage() {
 
     try {
       const fd = new FormData();
-      fd.append('name', uName);
-      fd.append('price', String(uPrice));
-      fd.append('brand', uSpecs.brand || '');
-      fd.append('ram', uSpecs.ram || '');
-      fd.append('storageType', uSpecs.storageType || '');
-      fd.append('storageSize', uSpecs.storageSize || '');
-      fd.append('processor', uSpecs.processor || '');
-      fd.append('specifications', [
-        uSpecs.brand && `Brand: ${uSpecs.brand}`,
-        uSpecs.ram && `RAM: ${uSpecs.ram}`,
-        uSpecs.storageType && `Storage Type: ${uSpecs.storageType}`,
-        uSpecs.storageSize && `Storage Size: ${uSpecs.storageSize}`,
-        uSpecs.processor && `Processor: ${uSpecs.processor}`,
-      ].filter(Boolean).join(' | '));
+      fd.append("name", uName);
+      fd.append("price", String(uPrice));
+      fd.append("brand", uSpecs.brand || "");
+      fd.append("ram", uSpecs.ram || "");
+      fd.append("storageType", uSpecs.storageType || "");
+      fd.append("storageSize", uSpecs.storageSize || "");
+      fd.append("processor", uSpecs.processor || "");
+      fd.append(
+        "specifications",
+        [
+          uSpecs.brand && `Brand: ${uSpecs.brand}`,
+          uSpecs.ram && `RAM: ${uSpecs.ram}`,
+          uSpecs.storageType && `Storage Type: ${uSpecs.storageType}`,
+          uSpecs.storageSize && `Storage Size: ${uSpecs.storageSize}`,
+          uSpecs.processor && `Processor: ${uSpecs.processor}`,
+        ]
+          .filter(Boolean)
+          .join(" | ")
+      );
 
       if (uFiles && uFiles.length > 0) {
-        fd.append('file', uFiles[0]);
+        fd.append("file", uFiles[0]);
       }
 
-      const res = await fetch('/api/upload', {
-        method: 'POST',
+      const res = await fetch("/api/upload", {
+        method: "POST",
         body: fd,
       });
 
@@ -239,7 +266,9 @@ export default function DashboardPage() {
           negotiable: uNegotiable,
           sold: false,
           specs: created.specifications || undefined,
-          images: created.imagePath ? [`/uploads/${created.imagePath}`] : uImages,
+          images: created.imagePath
+            ? [`/uploads/${created.imagePath}`]
+            : uImages,
         };
 
         setItems((prev: Computer[]) => [mapped, ...prev]);
@@ -253,7 +282,7 @@ export default function DashboardPage() {
           uSpecs.processor && `Processor: ${uSpecs.processor}`,
         ]
           .filter(Boolean)
-          .join(' | ');
+          .join(" | ");
 
         const newItem: Computer = {
           id: `${Date.now()}`,
@@ -277,7 +306,7 @@ export default function DashboardPage() {
         uSpecs.processor && `Processor: ${uSpecs.processor}`,
       ]
         .filter(Boolean)
-        .join(' | ');
+        .join(" | ");
 
       const newItem: Computer = {
         id: `${Date.now()}`,
@@ -307,7 +336,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleImageUpload = async (e:ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     const limited = Array.from(files).slice(0, 3);
@@ -343,7 +372,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 text-slate-900 flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
         <section className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm p-6 shadow-sm mb-6">
           <div className="mb-6 flex items-center gap-3">
@@ -351,8 +380,12 @@ export default function DashboardPage() {
               <i className="fa-solid fa-magnifying-glass text-slate-600 text-lg" />
             </div>
             <div>
-              <h3 className="text-xl font-light text-slate-800">Search & Filter</h3>
-              <p className="text-sm text-slate-500">Find devices in your inventory</p>
+              <h3 className="text-xl font-light text-slate-800">
+                Search & Filter
+              </h3>
+              <p className="text-sm text-slate-500">
+                Find devices in your inventory
+              </p>
             </div>
           </div>
 
@@ -369,19 +402,21 @@ export default function DashboardPage() {
                   <i className="fa-solid fa-magnifying-glass" />
                 </div>
               </div>
-               <div className="md:col-span-2">
-              <button className="w-full h-full inline-flex items-center justify-center gap-3 rounded-xl my-2 bg-slate-900 px-6 py-3 text-white font-medium transition-all duration-300 hover:shadow-lg hover:scale-105">
-                <i className="fa-solid fa-magnifying-glass" />
-                Search
-              </button>
-            </div>
+              <div className="md:col-span-2">
+                <button className="w-full h-full inline-flex items-center justify-center gap-3 rounded-xl my-2 bg-slate-900 px-6 py-3 text-white font-medium transition-all duration-300 hover:shadow-lg hover:scale-105">
+                  <i className="fa-solid fa-magnifying-glass" />
+                  Search
+                </button>
+              </div>
             </div>
 
             <div className="md:col-span-3">
               <div className="relative">
                 <select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as "all" | "sold" | "unsold")}
+                  onChange={(e) =>
+                    setStatus(e.target.value as "all" | "sold" | "unsold")
+                  }
                   className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 pr-11 text-slate-700 appearance-none transition-all duration-200 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 outline-none cursor-pointer"
                 >
                   <option value="all">All</option>
@@ -393,8 +428,6 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-
-          
           </div>
         </section>
 
@@ -406,14 +439,18 @@ export default function DashboardPage() {
                 <i className="fa-solid fa-computer text-slate-600 text-lg" />
               </div>
               <div>
-                <h3 className="text-xl font-light text-slate-800">Uploaded Devices</h3>
-                <p className="text-sm text-slate-500">{filtered.length} devices found</p>
+                <h3 className="text-xl font-light text-slate-800">
+                  Uploaded Devices
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {filtered.length} devices found
+                </p>
               </div>
             </div>
-            
+
             <button
               onClick={() => setUploadOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-blue-500 to-purple-600 px-5 py-2.5 text-white font-medium transition-all duration-300 hover:shadow-lg hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-white font-medium transition-all duration-300 hover:shadow-lg hover:scale-105"
             >
               <i className="fa-solid fa-plus" />
               Add Device
@@ -430,9 +467,13 @@ export default function DashboardPage() {
                   {/* Images Section - Medium Size */}
                   <div className="lg:w-1/3">
                     <div className="mb-4 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-700">Device Images</span>
+                      <span className="text-sm font-medium text-slate-700">
+                        Device Images
+                      </span>
                       {item.images.length === 0 && (
-                        <span className="text-xs text-slate-400">No images</span>
+                        <span className="text-xs text-slate-400">
+                          No images
+                        </span>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -464,7 +505,9 @@ export default function DashboardPage() {
                         </label>
                         <input
                           value={item.name}
-                          onChange={(e) => updateItem(item.id, { name: e.target.value })}
+                          onChange={(e) =>
+                            updateItem(item.id, { name: e.target.value })
+                          }
                           onFocus={() => setEditingItem(item.id)}
                           className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 text-slate-700 transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
                           placeholder="Enter device name"
@@ -480,7 +523,11 @@ export default function DashboardPage() {
                           <input
                             type="number"
                             value={item.price}
-                            onChange={(e) => updateItem(item.id, { price: Number(e.target.value) || 0 })}
+                            onChange={(e) =>
+                              updateItem(item.id, {
+                                price: Number(e.target.value) || 0,
+                              })
+                            }
                             onFocus={() => setEditingItem(item.id)}
                             className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 pr-12 text-slate-700 transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
                             placeholder="0.00"
@@ -497,7 +544,9 @@ export default function DashboardPage() {
                             type="checkbox"
                             checked={item.negotiable}
                             onChange={(e) => {
-                              updateItem(item.id, { negotiable: e.target.checked });
+                              updateItem(item.id, {
+                                negotiable: e.target.checked,
+                              });
                               setEditingItem(item.id);
                             }}
                             className="peer hidden"
@@ -517,36 +566,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      <div className="space-y-2 md:col-span-2">
-                        <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
-                          <i className="fa-regular fa-file-lines mr-1" />
-                          Specifications
-                        </label>
-                        <textarea
-                          className="min-h-24 w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 text-slate-700 transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none resize-none"
-                          value={item.specs || ""}
-                          onChange={(e) => updateItem(item.id, { specs: e.target.value })}
-                          onFocus={() => setEditingItem(item.id)}
-                          placeholder="Enter device specifications..."
-                        />
-                      </div>
-
                       {/* Image Upload */}
-                      <div className="space-y-2 md:col-span-2">
-                        <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
-                          <i className="fa-regular fa-images mr-1" />
-                          Update Images (Max 3)
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={(e) => onImagesChange(item.id, e.target.files)}
-                            className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-slate-700 transition-all duration-200"
-                          />
-                        </div>
-                      </div>
                     </div>
 
                     {/* Action Buttons */}
@@ -559,10 +579,14 @@ export default function DashboardPage() {
                               : "bg-amber-100/80 text-amber-700 shadow-sm"
                           }`}
                         >
-                          <i className={`fa-solid ${item.sold ? "fa-circle-check" : "fa-box"} text-sm`} />
+                          <i
+                            className={`fa-solid ${
+                              item.sold ? "fa-circle-check" : "fa-box"
+                            } text-sm`}
+                          />
                           {item.sold ? "Sold" : "Available"}
                         </span>
-                        
+
                         {item.hasUnsavedChanges && editingItem === item.id && (
                           <span className="inline-flex items-center gap-2 rounded-2xl bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700">
                             <i className="fa-solid fa-pen-to-square" />
@@ -576,7 +600,13 @@ export default function DashboardPage() {
                           <>
                             <button
                               className="inline-flex items-center gap-2 rounded-2xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-300 hover:bg-slate-200 hover:scale-105"
-                              onClick={() => cancelChanges(item.id, initialItems.find(i => i.id === item.id) || item)}
+                              onClick={() =>
+                                cancelChanges(
+                                  item.id,
+                                  initialItems.find((i) => i.id === item.id) ||
+                                    item
+                                )
+                              }
                             >
                               <i className="fa-solid fa-xmark" />
                               Cancel
@@ -590,7 +620,7 @@ export default function DashboardPage() {
                             </button>
                           </>
                         )}
-                        
+
                         {!item.sold && (
                           <button
                             className="inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-green-500 to-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:shadow-md hover:scale-105"
@@ -611,8 +641,14 @@ export default function DashboardPage() {
                         <button
                           className="inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-red-500 to-rose-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:shadow-md hover:scale-105"
                           onClick={() => {
-                            if (confirm("Are you sure you want to delete this device?")) {
-                              setItems((prev) => prev.filter((x) => x.id !== item.id));
+                            if (
+                              confirm(
+                                "Are you sure you want to delete this device?"
+                              )
+                            ) {
+                              setItems((prev) =>
+                                prev.filter((x) => x.id !== item.id)
+                              );
                             }
                           }}
                         >
@@ -641,76 +677,94 @@ export default function DashboardPage() {
                   <i className="fa-solid fa-receipt text-green-600 text-lg" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-light text-slate-800">Mark as Sold</h4>
-                  <p className="text-sm text-slate-500">Complete the sale details</p>
+                  <h4 className="text-xl font-light text-slate-800">
+                    Mark as Sold
+                  </h4>
+                  <p className="text-sm text-slate-500">
+                    Complete the sale details
+                  </p>
                 </div>
               </div>
-              <button 
+              <button
                 className="text-slate-400 hover:text-slate-600 transition-colors duration-200"
                 onClick={() => setSellId(null)}
               >
                 <i className="fa-solid fa-xmark text-xl" />
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Buyer Name</label>
-                <input 
+                <label className="text-sm font-medium text-slate-700">
+                  Buyer Name
+                </label>
+                <input
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                  value={buyerName} 
-                  onChange={(e) => setBuyerName(e.target.value)} 
+                  value={buyerName}
+                  onChange={(e) => setBuyerName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Phone Number</label>
-                <input 
+                <label className="text-sm font-medium text-slate-700">
+                  Phone Number
+                </label>
+                <input
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                  value={phone} 
-                  onChange={(e) => setPhone(e.target.value)} 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Computer Model</label>
-                <input 
+                <label className="text-sm font-medium text-slate-700">
+                  Computer Model
+                </label>
+                <input
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                  value={model} 
-                  onChange={(e) => setModel(e.target.value)} 
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Sale Price ($)</label>
-                <input 
-                  type="number" 
+                <label className="text-sm font-medium text-slate-700">
+                  Sale Price ($)
+                </label>
+                <input
+                  type="number"
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 transition-all duration-200 focus:border-blue-400 appearance-none focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none appearance-none"
-                  value={sellPrice} 
-                  onChange={(e) => setSellPrice(Number(e.target.value) || 0)} 
+                  value={sellPrice}
+                  onChange={(e) => setSellPrice(Number(e.target.value) || 0)}
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-slate-700">Specifications</label>
-                <textarea 
+                <label className="text-sm font-medium text-slate-700">
+                  Specifications
+                </label>
+                <textarea
                   className="min-h-24 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none resize-none"
-                  value={specs} 
-                  onChange={(e) => setSpecs(e.target.value)} 
+                  value={specs}
+                  onChange={(e) => setSpecs(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Warranty (months)</label>
-                <select 
+                <label className="text-sm font-medium text-slate-700">
+                  Warranty (months)
+                </label>
+                <select
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                  value={warrantyMonths} 
+                  value={warrantyMonths}
                   onChange={(e) => setWarrantyMonths(Number(e.target.value))}
                 >
                   {[6, 12, 18, 24, 36].map((m) => (
-                    <option key={m} value={m}>{m} months</option>
+                    <option key={m} value={m}>
+                      {m} months
+                    </option>
                   ))}
                 </select>
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-3">
-              <button 
+              <button
                 className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-slate-700 font-medium transition-all duration-200 hover:bg-slate-50 hover:scale-105"
                 onClick={() => setSellId(null)}
               >
@@ -724,7 +778,11 @@ export default function DashboardPage() {
                   if (!item) return;
 
                   // mark locally first for instant UI feedback
-                  updateItem(sellId, { sold: true, price: sellPrice, name: model });
+                  updateItem(sellId, {
+                    sold: true,
+                    price: sellPrice,
+                    name: model,
+                  });
 
                   const recHtml = `<!doctype html><html><head><meta charset="utf-8"/><title>Receipt - Royal Smart Computer</title>
                   <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px} h1{font-size:20px;margin:0 0 12px} .row{margin:4px 0} .muted{color:#6b7280} .box{border:1px solid #e5e7eb;padding:12px;border-radius:8px}</style>
@@ -736,7 +794,14 @@ export default function DashboardPage() {
                   <div class="row">Model: ${model}</div>
                   <div class="row">Price: $${sellPrice.toFixed(2)}</div>
                   <div class="row">Warranty: ${warrantyMonths} months</div>
-                  ${specs ? `<div class="row box"><strong>Specifications</strong><div class="muted">${specs.replace(/</g, "&lt;")}</div></div>` : ""}
+                  ${
+                    specs
+                      ? `<div class="row box"><strong>Specifications</strong><div class="muted">${specs.replace(
+                          /</g,
+                          "&lt;"
+                        )}</div></div>`
+                      : ""
+                  }
                   <hr style="margin:16px 0"/>
                   <div class="muted">Thank you for your purchase.</div>
                   <script>window.onload=()=>{window.print&&window.print();}</script>
@@ -747,27 +812,39 @@ export default function DashboardPage() {
                   // Try to persist the sale to the DB via API. Fallback to local-only if it fails.
                   try {
                     // include imagePath if available. If image is a data URL, upload it first to get a filename.
-                    let itemImage = item.images && item.images.length > 0 ? item.images[0] : '';
-                    let imagePath = '';
+                    let itemImage =
+                      item.images && item.images.length > 0
+                        ? item.images[0]
+                        : "";
+                    let imagePath = "";
                     if (itemImage) {
-                      if (itemImage.startsWith('/uploads/')) {
-                        imagePath = itemImage.replace('/uploads/', '');
-                      } else if (itemImage.startsWith('data:')) {
+                      if (itemImage.startsWith("/uploads/")) {
+                        imagePath = itemImage.replace("/uploads/", "");
+                      } else if (itemImage.startsWith("data:")) {
                         // upload data URL to server to persist and get filename
                         try {
                           const blob = await (await fetch(itemImage)).blob();
                           const form = new FormData();
                           // give a default filename
-                          const ext = blob.type.split('/')[1] || 'png';
+                          const ext = blob.type.split("/")[1] || "png";
                           const fileName = `sale_image.${ext}`;
-                          form.append('file', new File([blob], fileName, { type: blob.type }));
-                          const up = await fetch('/api/upload-image', { method: 'POST', body: form });
+                          form.append(
+                            "file",
+                            new File([blob], fileName, { type: blob.type })
+                          );
+                          const up = await fetch("/api/upload-image", {
+                            method: "POST",
+                            body: form,
+                          });
                           if (up.ok) {
                             const upJson = await up.json();
-                            imagePath = upJson.fileName || '';
+                            imagePath = upJson.fileName || "";
                           }
                         } catch (e) {
-                          console.error('Failed to upload inline image for sold item', e);
+                          console.error(
+                            "Failed to upload inline image for sold item",
+                            e
+                          );
                         }
                       }
                     }
@@ -782,19 +859,23 @@ export default function DashboardPage() {
                       imagePath,
                     };
 
-                    console.log('Posting sale payload', payload);
-                    const res = await fetch('/api/sold', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
+                    console.log("Posting sale payload", payload);
+                    const res = await fetch("/api/sold", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(payload),
                     });
 
                     let json: any = null;
-                    try { json = await res.json(); } catch (e) { console.error('Failed to parse /api/sold response', e); }
+                    try {
+                      json = await res.json();
+                    } catch (e) {
+                      console.error("Failed to parse /api/sold response", e);
+                    }
 
                     if (res.ok) {
                       const created = json?.sold;
-                      console.log('Sold created', created);
+                      console.log("Sold created", created);
                       setOrders((prev) => [
                         ...prev,
                         {
@@ -804,7 +885,9 @@ export default function DashboardPage() {
                           model: created.computerModel,
                           price: created.salesPrice || sellPrice,
                           specs: created.specifications || specs,
-                          warrantyMonths: parseInt(created.warranty || '', 10) || warrantyMonths,
+                          warrantyMonths:
+                            parseInt(created.warranty || "", 10) ||
+                            warrantyMonths,
                           receiptUrl,
                         },
                       ]);
@@ -857,7 +940,10 @@ export default function DashboardPage() {
         onAdd={handleAddFromModal}
       />
       <Head>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
       </Head>
     </div>
   );
