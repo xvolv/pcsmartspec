@@ -65,16 +65,32 @@ export default function AttachListing() {
   const [condition, setCondition] = useState<string>("New");
   const [specialFeatures, setSpecialFeatures] = useState<string[]>([]);
   const [specialInput, setSpecialInput] = useState<string>("");
+  const [batteryRange, setBatteryRange] = useState<string>("4-5");
+  const [batteryOther, setBatteryOther] = useState<string>("");
   const suggestions = useMemo(
     () => [
       "Backlit Keyboard",
-      "RTX 2050 GPU",
-      "NVMe SSD",
-      "16GB DDR4 3200MHz",
       "1080p 144Hz",
       "Windows 11 Home",
       "USB-C",
       "Wi‑Fi 6",
+      "360 degree hinge",
+      "RGB keyboard",
+    ],
+    []
+  );
+  const batteryOptions = useMemo(
+    () => [
+      "1-2",
+      "2-3",
+      "3-4",
+      "4-5",
+      "5-6",
+      "6-7",
+      "7-8",
+      "8-9",
+      "9-10",
+      "Other",
     ],
     []
   );
@@ -83,6 +99,20 @@ export default function AttachListing() {
     () => sampleSpec.Storage.reduce((sum, s) => sum + s.Size_GB, 0),
     []
   );
+  const ramSummary = useMemo(
+    () => `${sampleSpec.RAM_GB}GB ${sampleSpec.RAM_Type} ${sampleSpec.RAM_Speed_MHz}MHz`,
+    []
+  );
+  const storageKinds = useMemo(() => {
+    const kinds = Array.from(
+      new Set(
+        (sampleSpec.Storage || []).map((s) =>
+          [s.Type, s.BusType].filter(Boolean).join(" ")
+        )
+      )
+    );
+    return kinds.join(", ");
+  }, []);
 
   function onSelectImages(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
@@ -137,24 +167,24 @@ export default function AttachListing() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 py-8">
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border bg-white p-4">
+      <main className="mx-auto max-w-6xl px-6 py-8">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="rounded-xl border bg-white p-4 lg:col-span-2 xl:col-span-2">
             <div className="text-sm text-zinc-500">Model</div>
-            <div className="truncate text-lg font-semibold">
+            <div className="text-lg font-semibold truncate sm:whitespace-normal sm:overflow-visible sm:text-clip">
               {sampleSpec.Model}
             </div>
           </div>
           <div className="rounded-xl border bg-white p-4">
             <div className="text-sm text-zinc-500">CPU / RAM</div>
             <div className="text-lg font-semibold">
-              {sampleSpec.CPU.split(" ")[0]} · {sampleSpec.RAM_GB}GB
+              {sampleSpec.CPU.split(" ")[0]} · {ramSummary}
             </div>
           </div>
           <div className="rounded-xl border bg-white p-4">
             <div className="text-sm text-zinc-500">Storage Total</div>
             <div className="text-lg font-semibold">
-              {totalStorageGB.toFixed(0)} GB
+              {totalStorageGB.toFixed(0)} GB{storageKinds ? ` · ${storageKinds}` : ""}
             </div>
           </div>
           <div className="rounded-xl border bg-white p-4">
@@ -200,6 +230,28 @@ export default function AttachListing() {
                     <option>Used</option>
                     <option>Refurbished</option>
                   </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm text-zinc-600">Battery Life Expectancy</label>
+                  <select
+                    value={batteryRange}
+                    onChange={(e) => setBatteryRange(e.target.value)}
+                    className="w-full rounded-md border p-2 text-sm"
+                  >
+                    {batteryOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt === "Other" ? "Other" : `${opt} hours`}
+                      </option>
+                    ))}
+                  </select>
+                  {batteryRange === "Other" && (
+                    <input
+                      placeholder="e.g. BEST BATTERY LIFE"
+                      value={batteryOther}
+                      onChange={(e) => setBatteryOther(e.target.value)}
+                      className="w-full rounded-md border p-2 text-sm"
+                    />
+                  )}
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <label className="block text-sm text-zinc-600">Special Features</label>
@@ -291,7 +343,7 @@ export default function AttachListing() {
                 <ul className="mt-2 divide-y rounded-md border bg-zinc-50">
                   {sampleSpec.Storage.map((s, i) => (
                     <li key={i} className="grid grid-cols-4 gap-2 p-3 text-sm">
-                      <div className="col-span-2 truncate">{s.Model}</div>
+                      <div className="col-span-2 truncate sm:whitespace-normal sm:overflow-visible sm:text-clip">{s.Model}</div>
                       <div>
                         {s.Type}/{s.BusType}
                       </div>
@@ -398,7 +450,7 @@ function SpecItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border bg-white p-3">
       <div className="text-xs text-zinc-500">{label}</div>
-      <div className="truncate text-sm font-medium" title={value}>
+      <div className="text-sm font-medium truncate sm:whitespace-normal sm:overflow-visible sm:text-clip" title={value}>
         {value}
       </div>
     </div>

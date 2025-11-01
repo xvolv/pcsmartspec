@@ -63,6 +63,20 @@ export default function AdminDashboard() {
     () => sampleSpec.Storage.reduce((sum, s) => sum + s.Size_GB, 0),
     []
   );
+  const ramSummary = useMemo(
+    () => `${sampleSpec.RAM_GB}GB ${sampleSpec.RAM_Type} ${sampleSpec.RAM_Speed_MHz}MHz`,
+    []
+  );
+  const storageKinds = useMemo(() => {
+    const kinds = Array.from(
+      new Set(
+        (sampleSpec.Storage || []).map((s) =>
+          [s.Type, s.BusType].filter(Boolean).join(" ")
+        )
+      )
+    );
+    return kinds.join(", ");
+  }, []);
 
   const mockSold = useMemo(
     () => [
@@ -136,23 +150,23 @@ export default function AdminDashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-8">
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border bg-white p-4">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="rounded-xl border bg-white p-4 lg:col-span-2 xl:col-span-2">
             <div className="text-sm text-zinc-500">Model</div>
-            <div className="truncate text-lg font-semibold">
+            <div className="text-lg font-semibold truncate sm:whitespace-normal sm:overflow-visible sm:text-clip">
               {sampleSpec.Model}
             </div>
           </div>
           <div className="rounded-xl border bg-white p-4">
             <div className="text-sm text-zinc-500">CPU / RAM</div>
             <div className="text-lg font-semibold">
-              {sampleSpec.CPU.split(" ")[0]} · {sampleSpec.RAM_GB}GB
+              {sampleSpec.CPU.split(" ")[0]} · {ramSummary}
             </div>
           </div>
           <div className="rounded-xl border bg-white p-4">
             <div className="text-sm text-zinc-500">Storage Total</div>
             <div className="text-lg font-semibold">
-              {totalStorageGB.toFixed(0)} GB
+              {totalStorageGB.toFixed(0)} GB{storageKinds ? ` · ${storageKinds}` : ""}
             </div>
           </div>
           <div className="rounded-xl border bg-white p-4">
@@ -195,7 +209,7 @@ export default function AdminDashboard() {
                 <ul className="mt-2 divide-y rounded-md border bg-zinc-50">
                   {sampleSpec.Storage.map((s, i) => (
                     <li key={i} className="grid grid-cols-4 gap-2 p-3 text-sm">
-                      <div className="col-span-2 truncate">{s.Model}</div>
+                      <div className="col-span-2 truncate sm:whitespace-normal sm:overflow-visible sm:text-clip">{s.Model}</div>
                       <div>
                         {s.Type}/{s.BusType}
                       </div>
