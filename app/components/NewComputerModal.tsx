@@ -27,7 +27,7 @@ export default function NewComputerModal({
   onClose: () => void;
   onAdd: (data: NewComputerData) => void;
 }) {
-  const [uPrice, setUPrice] = useState<string | number>("");
+  const [uPrice, setUPrice] = useState<string>("");
   const [uNegotiable, setUNegotiable] = useState(true);
   const [uSpecs, setUSpecs] = useState<SpecsState>({
     brand: "",
@@ -198,6 +198,7 @@ export default function NewComputerModal({
     setAdditionalSpecs("");
     setExtraItems([]);
     setExtraInput("");
+    setBatteryCondition("");
     onClose();
   };
 
@@ -304,6 +305,7 @@ export default function NewComputerModal({
   ];
 
   const [warranty, setWarranty] = useState<string>("");
+  const [batteryCondition, setBatteryCondition] = useState<string>("");
 
   // Brand and Model options
   const brandOptions = [
@@ -370,6 +372,7 @@ export default function NewComputerModal({
     let post: string;
     const parts = [
       `Condition: ${condition || "—"}`,
+      batteryCondition && `Battery: ${batteryCondition}`,
       cpuBrand &&
         `CPU: ${[cpuBrand, cpuSeries, cpuGeneration, cpuModel]
           .filter(Boolean)
@@ -521,21 +524,36 @@ export default function NewComputerModal({
             <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Condition
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Condition
-              </label>
-              <select
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                value={condition}
-                onChange={(e) => setCondition(e.target.value)}
-              >
-                <option value="">Select Condition</option>
-                <option value="New">New</option>
-                <option value="Like New">Like New</option>
-                <option value="Used">Used</option>
-                <option value="Refurbished">Refurbished</option>
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Condition</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={condition}
+                  onChange={(e) => setCondition(e.target.value)}
+                >
+                  <option value="">Select Condition</option>
+                  <option value="New">New</option>
+                  <option value="Like New">Like New</option>
+                  <option value="Used">Used</option>
+                  <option value="Refurbished">Refurbished</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Battery Condition</label>
+                <select
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={batteryCondition}
+                  onChange={(e) => setBatteryCondition(e.target.value)}
+                >
+                  <option value="">Select Battery</option>
+                  <option value="Excellent">Excellent</option>
+                  <option value="Good">Good</option>
+                  <option value="Fair">Fair</option>
+                  <option value="Weak">Weak</option>
+                  <option value="Needs Replacement">Needs Replacement</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -636,10 +654,12 @@ export default function NewComputerModal({
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
                   value={ramCapacity}
                   onChange={(e) => setRamCapacity(e.target.value)}
-                  disabled={!ramType}
                 >
                   <option value="">Select</option>
-                  {(ramType ? ramCapByType[ramType] : []).map((c) => (
+                  {(ramType
+                    ? ramCapByType[ramType]
+                    : Array.from(new Set(Object.values(ramCapByType).flat()))
+                  ).map((c) => (
                     <option key={c} value={c}>
                       {c}
                     </option>
@@ -837,59 +857,7 @@ export default function NewComputerModal({
             </div>
           </div>
 
-          {/* Other Specs */}
-          <div className="md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
-            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              Other Specs
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {[
-                {
-                  label: "RAM",
-                  key: "ram",
-                  options: ["4GB", "8GB", "16GB", "32GB"],
-                },
-                {
-                  label: "Storage Type",
-                  key: "storageType",
-                  options: ["SSD", "HDD", "Hybrid"],
-                },
-                {
-                  label: "Storage Size",
-                  key: "storageSize",
-                  options: ["128GB", "256GB", "512GB", "1TB"],
-                },
-                {
-                  label: "Processor",
-                  key: "processor",
-                  options: ["Intel i5", "Intel i7", "AMD Ryzen 5", "M1/M2"],
-                },
-              ].map((spec: any) => (
-                <div key={spec.key} className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    {spec.label}
-                  </label>
-                  <select
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                    value={(uSpecs as any)[spec.key]}
-                    onChange={(e) =>
-                      setUSpecs((prev) => ({
-                        ...prev,
-                        [spec.key]: e.target.value,
-                      }))
-                    }
-                  >
-                    <option value="">Select {spec.label}</option>
-                    {spec.options.map((opt: string) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-          </div>
+          
 
           {/* Additional Specifications (optional) */}
           <div className="space-y-2 md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
@@ -1006,10 +974,7 @@ export default function NewComputerModal({
               type="number"
               className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
               value={uPrice}
-              onChange={(e) => {
-                const value = e.target.value;
-                setUPrice(value === "" ? "" : Number(value));
-              }}
+              onChange={(e) => setUPrice(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-3 md:col-span-2">
