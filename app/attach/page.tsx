@@ -1038,8 +1038,13 @@ export default function AttachListing() {
                     price,
                     extras: {
                       condition,
-                      // you can include additional fields as needed
+                      negotiable,
+                      guaranteeMonths,
+                      guaranteeProvider,
+                      battery: batteryRange === "Other" ? batteryOther : batteryRange,
+                      specialFeatures,
                     },
+                    images,
                   }),
                 });
                 if (!res.ok) {
