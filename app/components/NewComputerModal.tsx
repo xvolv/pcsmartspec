@@ -16,6 +16,29 @@ export type NewComputerData = {
   negotiable: boolean;
   specs: string;
   images: string[];
+  // manual fields for mapping
+  brand?: string;
+  series?: string;
+  model?: string;
+  condition?: string;
+  batteryCondition?: string;
+  extraItems?: string[];
+  warranty?: string;
+  refreshRate?: string;
+  cpuBrand?: string;
+  cpuSeries?: string;
+  cpuGeneration?: string;
+  cpuModel?: string;
+  ramType?: string;
+  ramCapacity?: string;
+  storageTypeMain?: string;
+  storageCapacity?: string;
+  screenSize?: string;
+  resolution?: string;
+  gpuType?: string;
+  gpuBrand?: string;
+  gpuSeries?: string;
+  gpuVram?: string;
 };
 
 export default function NewComputerModal({
@@ -25,7 +48,7 @@ export default function NewComputerModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onAdd: (data: NewComputerData) => void;
+  onAdd: (data: NewComputerData) => Promise<boolean>;
 }) {
   const [uPrice, setUPrice] = useState<string>("");
   const [uNegotiable, setUNegotiable] = useState(true);
@@ -90,6 +113,7 @@ export default function NewComputerModal({
   const [modelQuery, setModelQuery] = useState<string>("");
 
   const MAX_IMAGES = 4;
+  const [saving, setSaving] = useState(false);
 
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -159,52 +183,86 @@ export default function NewComputerModal({
       .join(" | ");
   };
 
-  const addAndClose = () => {
-    if (!uSpecs.brand) return;
+  const addAndClose = async () => {
+    if (!uSpecs.brand) {
+      alert("Please select a Brand before saving");
+      return;
+    }
     const specsString = buildSpecsString(uSpecs);
     const computedName = [uSpecs.brand, series, model]
       .filter(Boolean)
       .join(" ");
-    onAdd({
-      name: computedName,
-      price: Number(uPrice || 0),
-      negotiable: uNegotiable,
-      specs: specsString,
-      images: uImages,
-    });
-    setUPrice("");
-    setUNegotiable(true);
-    setUSpecs({
-      brand: "",
-      ram: "",
-      storageType: "",
-      storageSize: "",
-      processor: "",
-    });
-    setUImages([]);
-    setModel("");
-    setSeries("");
-    setCondition("");
-    setCpuBrand("");
-    setCpuSeries("");
-    setCpuGeneration("");
-    setCpuModel("");
-    setRamType("");
-    setRamCapacity("");
-    setStorageTypeMain("");
-    setStorageCapacity("");
-    setScreenSize("");
-    setResolution("");
-    setRefreshRate("");
-    setGpuType("");
-    setGpuBrand("");
-    setGpuSeries("");
-    setGpuVram("");
-    setAdditionalSpecs("");
-    setExtraItems([]);
-    setExtraInput("");
-    setBatteryCondition("");
-    onClose();
+
+    try {
+      setSaving(true);
+      const ok = await onAdd({
+        name: computedName,
+        price: Number(uPrice || 0),
+        negotiable: uNegotiable,
+        specs: specsString,
+        images: uImages,
+        brand: uSpecs.brand,
+        series,
+        model,
+        condition,
+        batteryCondition,
+        extraItems,
+        warranty,
+        refreshRate,
+        cpuBrand,
+        cpuSeries,
+        cpuGeneration,
+        cpuModel,
+        ramType,
+        ramCapacity,
+        storageTypeMain,
+        storageCapacity,
+        screenSize,
+        resolution,
+        gpuType,
+        gpuBrand,
+        gpuSeries,
+        gpuVram,
+      });
+
+      if (!ok) {
+        alert("❌ Failed to save listing. See console/network for details.");
+        return; // keep modal open
+      }
+      alert("✅ Listing saved");
+      // reset on success
+      setUPrice("");
+      setUNegotiable(true);
+      setUSpecs({ brand: "", ram: "", storageType: "", storageSize: "", processor: "" });
+      setUImages([]);
+      setModel("");
+      setSeries("");
+      setCondition("");
+      setCpuBrand("");
+      setCpuSeries("");
+      setCpuGeneration("");
+      setCpuModel("");
+      setRamType("");
+      setRamCapacity("");
+      setStorageTypeMain("");
+      setStorageCapacity("");
+      setScreenSize("");
+      setResolution("");
+      setRefreshRate("");
+      setGpuType("");
+      setGpuBrand("");
+      setGpuSeries("");
+      setGpuVram("");
+      setAdditionalSpecs("");
+      setExtraItems([]);
+      setExtraInput("");
+      setBatteryCondition("");
+      onClose();
+    } catch (e: any) {
+      alert(`❌ Error: ${e?.message || "Unknown error"}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Mappings
@@ -1044,12 +1102,13 @@ export default function NewComputerModal({
             Generate Post
           </button>
           <button
+            type="button"
             className="rounded-xl bg-black px-6 py-3 text-white font-medium hover:shadow-lg hover:scale-105 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            onClick={addAndClose}
-            disabled={!uSpecs.brand}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); addAndClose(); }}
+            disabled={!uSpecs.brand || saving}
           >
             <i className="fa-solid fa-plus mr-2" />
-            Add Device
+            {saving ? 'Saving…' : 'Add Device'}
           </button>
         </div>
       </div>

@@ -23,7 +23,10 @@
     "OS": "Microsoft Windows 11 Pro",
     "Scan_Time": "2025-11-02T12:23:30.633Z",
     "createdAt": "2025-11-02T12:23:30.633Z",
-    "status": "pending",
-    "id": "scan_1762086210633"
+    "status": "published",
+    "id": "scan_1762086210633",
+    "title": "HP HP EliteBook 840 G5",
+    "price": "49998",
+    "publishedAt": "2025-11-02T14:17:08.176Z"
   }
 }
