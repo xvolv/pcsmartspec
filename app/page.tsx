@@ -3,7 +3,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,24 +30,19 @@ export default function LoginPage() {
         throw new Error("Password must be a 6-digit code");
       }
 
-      const supabase = createSupabaseBrowser();
-      const { data: user, error: dbError } = await supabase
-        .from("users")
-        .select("id,email,password")
-        .eq("email", emailTrim)
-        .single();
-
-      if (dbError || !user) {
-        throw new Error("Invalid email or password");
-      }
-
-      if (user.password !== passwordTrim) {
-        throw new Error("Invalid email or password");
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailTrim, password: passwordTrim }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || "Invalid email or password");
       }
 
       const store = remember ? localStorage : sessionStorage;
-      store.setItem("rsc_user_id", String(user.id));
-      store.setItem("rsc_email", String(user.email));
+      store.setItem("rsc_user_id", String(data.id));
+      store.setItem("rsc_email", String(data.email));
       store.setItem("rsc_authed", "1");
 
       router.push("/dashboard");
@@ -176,6 +170,11 @@ export default function LoginPage() {
                 "Sign in"
               )}
             </button>
+            <div className="mt-4 text-center text-sm">
+              <Link href="/admin/add-user" className="text-slate-600 hover:text-slate-800">
+                Add user
+              </Link>
+            </div>
           </form>
         </div>
       </div>
