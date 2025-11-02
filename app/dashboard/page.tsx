@@ -218,17 +218,69 @@ export default function DashboardPage() {
     );
     setEditingItem(null);
   }
-  function handleAddFromModal(data: NewComputerData) {
-    const newItem: Computer = {
-      id: `${Date.now()}`,
-      name: data.name,
-      price: Number(data.price),
-      negotiable: data.negotiable,
-      sold: false,
-      specs: data.specs,
-      images: data.images,
-    };
-    setItems((prev: Computer[]) => [newItem, ...prev]);
+  async function handleAddFromModal(data: NewComputerData): Promise<boolean> {
+    try {
+      const payload = {
+        title: data.name,
+        price: String(data.price ?? ""),
+        negotiable: data.negotiable,
+        brand: data.brand,
+        series: data.series,
+        model: data.model,
+        condition: data.condition,
+        batteryCondition: data.batteryCondition,
+        extraItems: data.extraItems,
+        warranty: data.warranty,
+        refreshRate: data.refreshRate,
+        cpuBrand: data.cpuBrand,
+        cpuSeries: data.cpuSeries,
+        cpuGeneration: data.cpuGeneration,
+        cpuModel: data.cpuModel,
+        ramType: data.ramType,
+        ramCapacity: data.ramCapacity,
+        storageTypeMain: data.storageTypeMain,
+        storageCapacity: data.storageCapacity,
+        screenSize: data.screenSize,
+        resolution: data.resolution,
+        gpuType: data.gpuType,
+        gpuBrand: data.gpuBrand,
+        gpuSeries: data.gpuSeries,
+        gpuVram: data.gpuVram,
+        specs: data.specs,
+        images: data.images,
+      };
+      console.log('[manual] sending payload', payload);
+      const res = await fetch('/api/listings/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const text = await res.text();
+      let json: any = null;
+      try { json = text ? JSON.parse(text) : null; } catch {}
+      console.log('[manual] response', res.status, json || text);
+      if (!res.ok) {
+        alert(`❌ Save failed: ${res.status} ${res.statusText}`);
+        return false;
+      }
+      const created = json?.data;
+      const newItem: Computer = {
+        id: created?.id || `${Date.now()}`,
+        name: data.name,
+        price: Number(data.price),
+        negotiable: data.negotiable,
+        sold: false,
+        specs: data.specs,
+        images: data.images,
+      };
+      setItems((prev: Computer[]) => [newItem, ...prev]);
+      alert('✅ Saved to database');
+      return true;
+    } catch (err: any) {
+      console.error('[manual] error', err?.message || err);
+      alert(`❌ Error: ${err?.message || 'Unknown error'}`);
+      return false;
+    }
   }
   const handleAddDevice = async () => {
     if (!uName) return;
