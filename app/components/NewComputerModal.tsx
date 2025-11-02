@@ -80,7 +80,7 @@ export default function NewComputerModal({
   const [gpuType, setGpuType] = useState<string>("");
   const [gpuBrand, setGpuBrand] = useState<string>("");
   const [gpuSeries, setGpuSeries] = useState<string>("");
-  const [gpuModel, setGpuModel] = useState<string>("");
+
   const [gpuVram, setGpuVram] = useState<string>("");
 
   // Brand/Model combobox helpers
@@ -89,10 +89,14 @@ export default function NewComputerModal({
   const [modelOpen, setModelOpen] = useState<boolean>(false);
   const [modelQuery, setModelQuery] = useState<string>("");
 
+  const MAX_IMAGES = 4;
+
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    const limited = Array.from(files).slice(0, 5);
+    const availableSlots = MAX_IMAGES - uImages.length;
+    if (availableSlots <= 0) return;
+    const limited = Array.from(files).slice(0, availableSlots);
     const previews: string[] = await Promise.all(
       limited.map(
         (f) =>
@@ -129,7 +133,7 @@ export default function NewComputerModal({
     ]
       .filter(Boolean)
       .join(" | ");
-    const gpuSummary = [gpuType, gpuBrand, gpuSeries, gpuModel, gpuVram]
+    const gpuSummary = [gpuType, gpuBrand, gpuSeries, gpuVram]
       .filter(Boolean)
       .join(" ");
 
@@ -195,7 +199,6 @@ export default function NewComputerModal({
     setGpuType("");
     setGpuBrand("");
     setGpuSeries("");
-    setGpuModel("");
     setGpuVram("");
     setAdditionalSpecs("");
     setExtraItems([]);
@@ -328,7 +331,15 @@ export default function NewComputerModal({
   ];
 
   const modelOptionsByBrand: Record<string, string[]> = {
-    Dell: ["Inspiron", "Vostro", "Latitude", "XPS", "Precision", "G Series", "Alienware"],
+    Dell: [
+      "Inspiron",
+      "Vostro",
+      "Latitude",
+      "XPS",
+      "Precision",
+      "G Series",
+      "Alienware",
+    ],
     HP: [
       "HP Laptop (Generic line)",
       "HP 15 / HP 17",
@@ -343,10 +354,26 @@ export default function NewComputerModal({
       "HP Omen",
       "HP ZBook",
     ],
-    Lenovo: ["IdeaPad", "ThinkPad", "Yoga", "Legion", "ThinkBook", "Chromebook", "Flex"],
+    Lenovo: [
+      "IdeaPad",
+      "ThinkPad",
+      "Yoga",
+      "Legion",
+      "ThinkBook",
+      "Chromebook",
+      "Flex",
+    ],
     Apple: ["MacBook Air", "MacBook Pro", "iMac"],
     Asus: ["ZenBook", "VivoBook", "ROG", "TUF"],
-    Acer: ["Aspire", "Swift", "Spin", "Nitro", "Predator", "TravelMate", "Chromebook"],
+    Acer: [
+      "Aspire",
+      "Swift",
+      "Spin",
+      "Nitro",
+      "Predator",
+      "TravelMate",
+      "Chromebook",
+    ],
     MSI: [
       "Modern",
       "Prestige",
@@ -359,15 +386,31 @@ export default function NewComputerModal({
       "Titan",
       "Creator",
     ],
-    "Microsoft (Surface)": ["Surface Laptop", "Surface Pro", "Surface Book", "Surface Go"],
-    Samsung: ["Galaxy Book", "Notebook 9", "Notebook 7", "Notebook 5", "Odyssey"],
+    "Microsoft (Surface)": [
+      "Surface Laptop",
+      "Surface Pro",
+      "Surface Book",
+      "Surface Go",
+    ],
+    Samsung: [
+      "Galaxy Book",
+      "Notebook 9",
+      "Notebook 7",
+      "Notebook 5",
+      "Odyssey",
+    ],
     Razer: ["Blade 14", "Blade 15", "Blade 16", "Blade 18", "Blade Stealth"],
     Toshiba: ["Satellite", "Tecra", "Portégé", "Qosmio", "Dynabook"],
-    Huawei: ["MateBook D", "MateBook X", "MateBook 13", "MateBook 14", "MateBook 16"],
+    Huawei: [
+      "MateBook D",
+      "MateBook X",
+      "MateBook 13",
+      "MateBook 14",
+      "MateBook 16",
+    ],
     Gigabyte: ["AERO", "AORUS", "G5", "G7", "U4", "U7"],
     LG: ["Gram", "Ultra PC"],
   };
-
 
   async function handleGeneratePost() {
     const title = [uSpecs.brand, series, model].filter(Boolean).join(" ");
@@ -389,8 +432,8 @@ export default function NewComputerModal({
         `Display: ${[screenSize, resolution, refreshRate]
           .filter(Boolean)
           .join(" • ")}`,
-      (gpuType || gpuBrand || gpuSeries || gpuModel || gpuVram) &&
-        `Graphics: ${[gpuType, gpuBrand, gpuSeries, gpuModel, gpuVram]
+      (gpuType || gpuBrand || gpuSeries || gpuVram) &&
+        `Graphics: ${[gpuType, gpuBrand, gpuSeries, gpuVram]
           .filter(Boolean)
           .join(" ")}`,
       warranty && `Warranty: ${warranty}`,
@@ -489,7 +532,9 @@ export default function NewComputerModal({
                     }}
                     onFocus={() => setModelOpen(true)}
                     onBlur={() => setTimeout(() => setModelOpen(false), 100)}
-                    placeholder={uSpecs.brand ? "Search model..." : "Select brand first"}
+                    placeholder={
+                      uSpecs.brand ? "Search model..." : "Select brand first"
+                    }
                   />
                   {modelOpen && !!uSpecs.brand && (
                     <div className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
@@ -528,7 +573,9 @@ export default function NewComputerModal({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Condition</label>
+                <label className="text-sm font-medium text-slate-700">
+                  Condition
+                </label>
                 <select
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
                   value={condition}
@@ -542,7 +589,9 @@ export default function NewComputerModal({
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Battery Condition</label>
+                <label className="text-sm font-medium text-slate-700">
+                  Battery Condition
+                </label>
                 <select
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
                   value={batteryCondition}
@@ -766,7 +815,6 @@ export default function NewComputerModal({
                     setGpuType(e.target.value);
                     setGpuBrand("");
                     setGpuSeries("");
-                    setGpuModel("");
                   }}
                 >
                   <option value="">Select</option>
@@ -785,7 +833,6 @@ export default function NewComputerModal({
                   onChange={(e) => {
                     setGpuBrand(e.target.value);
                     setGpuSeries("");
-                    setGpuModel("");
                   }}
                   disabled={!gpuType}
                 >
@@ -806,15 +853,7 @@ export default function NewComputerModal({
                   placeholder="e.g., RTX 40, RX 7000, Iris Xe"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs text-slate-600">Model</label>
-                <input
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                  value={gpuModel}
-                  onChange={(e) => setGpuModel(e.target.value)}
-                  placeholder="e.g., RTX 4060, RX 7600S, 780M"
-                />
-              </div>
+
               <div className="space-y-1">
                 <label className="text-xs text-slate-600">VRAM</label>
                 <input
@@ -850,8 +889,6 @@ export default function NewComputerModal({
               </div>
             </div>
           </div>
-
-          
 
           {/* Additional Specifications (optional) */}
           <div className="space-y-2 md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
@@ -915,15 +952,19 @@ export default function NewComputerModal({
           </div>
           <div className="space-y-2 md:col-span-2">
             <label className="text-sm font-medium text-slate-700">
-              Images (max 5)
+              Images ({uImages.length}/{MAX_IMAGES} uploaded)
             </label>
             <input
               type="file"
               accept="image/*"
-              multiple
               capture="environment"
               onChange={handleImageUpload}
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 transition-all duration-200"
+              disabled={uImages.length >= MAX_IMAGES}
+              className={`w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white transition-all duration-200 ${
+                uImages.length >= MAX_IMAGES
+                  ? 'opacity-50 cursor-not-allowed file:bg-gray-400'
+                  : 'file:bg-black hover:file:bg-gray-700'
+              }`}
             />
             {uImages.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mt-3">
