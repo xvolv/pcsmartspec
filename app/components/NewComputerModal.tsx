@@ -84,9 +84,6 @@ export default function NewComputerModal({
   const [gpuSeries, setGpuSeries] = useState<string>("");
   const [gpuModel, setGpuModel] = useState<string>("");
 
-  // Contact
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [telegram, setTelegram] = useState<string>("");
 
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -160,8 +157,6 @@ export default function NewComputerModal({
       s.storageSize && `Legacy Storage Size: ${s.storageSize}`,
       s.processor && `Legacy Processor: ${s.processor}`,
       warranty && `Warranty: ${warranty}`,
-      phoneNumber && `Phone: ${phoneNumber}`,
-      telegram && `Telegram: ${telegram}`,
       additionalSpecs && additionalSpecs,
     ]
       .filter(Boolean)
@@ -203,8 +198,6 @@ export default function NewComputerModal({
     setGpuBrand("");
     setGpuSeries("");
     setGpuModel("");
-    setPhoneNumber("");
-    setTelegram("");
     setAdditionalSpecs("");
     onClose();
   };
@@ -343,8 +336,6 @@ export default function NewComputerModal({
         warranty && `Warranty: ${warranty}`,
         additionalSpecs && `Notes: ${additionalSpecs}`,
         `Price: ${uPrice ? `${uPrice} Birr` : "—"}`,
-        phoneNumber && `Phone: ${phoneNumber}`,
-        telegram && `Telegram: ${telegram}`,
       ].filter(Boolean);
       post = `📦 ${title || "Laptop"}\n\n${parts.join("\n")}`;
     }
@@ -359,8 +350,8 @@ export default function NewComputerModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="w-full mt-80 max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl animate-fadeIn">
         <div className="mb-6 flex items-left justify-end  top-0 bg-white">
           <button className="  transition-colors duration-200 hover:cursor-pointer" onClick={onClose}>
             <i className="fa-solid fa-xmark text-xl" />
@@ -815,10 +806,10 @@ export default function NewComputerModal({
             </div>
           </div>
 
-          {/* Warranty & Contact */}
+          {/* Warranty */}
           <div className="md:col-span-2">
-            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Warranty & Contact</div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Warranty</div>
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-3">
               <div className="space-y-1">
                 <label className="text-xs text-slate-600">Warranty</label>
                 <select
@@ -831,24 +822,6 @@ export default function NewComputerModal({
                     <option key={w} value={w}>{w}</option>
                   ))}
                 </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-slate-600">Phone</label>
-                <input
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="09…"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-slate-600">Telegram</label>
-                <input
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                  value={telegram}
-                  onChange={(e) => setTelegram(e.target.value)}
-                  placeholder="@username"
-                />
               </div>
             </div>
           </div>
