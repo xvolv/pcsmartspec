@@ -81,6 +81,7 @@ export default function NewComputerModal({
   const [gpuBrand, setGpuBrand] = useState<string>("");
   const [gpuSeries, setGpuSeries] = useState<string>("");
   const [gpuModel, setGpuModel] = useState<string>("");
+  const [gpuVram, setGpuVram] = useState<string>("");
 
   // Brand/Model combobox helpers
   const [brandOpen, setBrandOpen] = useState<boolean>(false);
@@ -128,7 +129,7 @@ export default function NewComputerModal({
     ]
       .filter(Boolean)
       .join(" | ");
-    const gpuSummary = [gpuType, gpuBrand, gpuSeries, gpuModel]
+    const gpuSummary = [gpuType, gpuBrand, gpuSeries, gpuModel, gpuVram]
       .filter(Boolean)
       .join(" ");
 
@@ -195,6 +196,7 @@ export default function NewComputerModal({
     setGpuBrand("");
     setGpuSeries("");
     setGpuModel("");
+    setGpuVram("");
     setAdditionalSpecs("");
     setExtraItems([]);
     setExtraInput("");
@@ -387,8 +389,8 @@ export default function NewComputerModal({
         `Display: ${[screenSize, resolution, refreshRate]
           .filter(Boolean)
           .join(" • ")}`,
-      (gpuType || gpuBrand || gpuSeries || gpuModel) &&
-        `Graphics: ${[gpuType, gpuBrand, gpuSeries, gpuModel]
+      (gpuType || gpuBrand || gpuSeries || gpuModel || gpuVram) &&
+        `Graphics: ${[gpuType, gpuBrand, gpuSeries, gpuModel, gpuVram]
           .filter(Boolean)
           .join(" ")}`,
       warranty && `Warranty: ${warranty}`,
@@ -797,38 +799,30 @@ export default function NewComputerModal({
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-slate-600">Series</label>
-                <select
+                <input
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
                   value={gpuSeries}
-                  onChange={(e) => {
-                    setGpuSeries(e.target.value);
-                    setGpuModel("");
-                  }}
-                  disabled={!gpuBrand}
-                >
-                  <option value="">Select</option>
-                  {(gpuBrand ? gpuSeriesByBrand[gpuBrand] : []).map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(e) => setGpuSeries(e.target.value)}
+                  placeholder="e.g., RTX 40, RX 7000, Iris Xe"
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-slate-600">Model</label>
-                <select
+                <input
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
                   value={gpuModel}
                   onChange={(e) => setGpuModel(e.target.value)}
-                  disabled={!gpuSeries}
-                >
-                  <option value="">Select</option>
-                  {(gpuSeries ? gpuModelsBySeries[gpuSeries] : []).map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="e.g., RTX 4060, RX 7600S, 780M"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-600">VRAM</label>
+                <input
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                  value={gpuVram}
+                  onChange={(e) => setGpuVram(e.target.value)}
+                  placeholder="e.g., 4GB, 6GB, 8GB, 16GB"
+                />
               </div>
             </div>
           </div>
