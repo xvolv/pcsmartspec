@@ -41,6 +41,8 @@ export default function NewComputerModal({
   const [additionalSpecs, setAdditionalSpecs] = useState<string>("");
   const [series, setSeries] = useState<string>("");
   const [condition, setCondition] = useState<string>("");
+  const [extraItems, setExtraItems] = useState<string[]>([]);
+  const [extraInput, setExtraInput] = useState<string>("");
 
   // Quick gaming spec (compact fields)
   const [gCpu, setGCpu] = useState<string>(""); // e.g., Intel core Ultra 9 (i9-14900HX)
@@ -67,7 +69,6 @@ export default function NewComputerModal({
   const [ramType, setRamType] = useState<string>("");
   const [ramCapacity, setRamCapacity] = useState<string>("");
   const [storageTypeMain, setStorageTypeMain] = useState<string>("");
-  const [storageSubtype, setStorageSubtype] = useState<string>("");
   const [storageCapacity, setStorageCapacity] = useState<string>("");
 
   // Display
@@ -80,6 +81,12 @@ export default function NewComputerModal({
   const [gpuBrand, setGpuBrand] = useState<string>("");
   const [gpuSeries, setGpuSeries] = useState<string>("");
   const [gpuModel, setGpuModel] = useState<string>("");
+
+  // Brand/Model combobox helpers
+  const [brandOpen, setBrandOpen] = useState<boolean>(false);
+  const [brandQuery, setBrandQuery] = useState<string>("");
+  const [modelOpen, setModelOpen] = useState<boolean>(false);
+  const [modelQuery, setModelQuery] = useState<string>("");
 
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -110,7 +117,6 @@ export default function NewComputerModal({
       .join(" | ");
     const storageSummary = [
       storageTypeMain && `Storage: ${storageTypeMain}`,
-      storageSubtype && `Sub-type: ${storageSubtype}`,
       storageCapacity && `Capacity: ${storageCapacity}`,
     ]
       .filter(Boolean)
@@ -142,7 +148,7 @@ export default function NewComputerModal({
       s.storageSize && `Legacy Storage Size: ${s.storageSize}`,
       s.processor && `Legacy Processor: ${s.processor}`,
       warranty && `Warranty: ${warranty}`,
-      additionalSpecs && additionalSpecs,
+      extraItems.length > 0 && `Notes: ${extraItems.join(", ")}`,
     ]
       .filter(Boolean)
       .join(" | ");
@@ -181,7 +187,6 @@ export default function NewComputerModal({
     setRamType("");
     setRamCapacity("");
     setStorageTypeMain("");
-    setStorageSubtype("");
     setStorageCapacity("");
     setScreenSize("");
     setResolution("");
@@ -191,6 +196,8 @@ export default function NewComputerModal({
     setGpuSeries("");
     setGpuModel("");
     setAdditionalSpecs("");
+    setExtraItems([]);
+    setExtraInput("");
     onClose();
   };
 
@@ -262,19 +269,7 @@ export default function NewComputerModal({
     LPDDR5: ["8GB", "16GB", "32GB"],
   };
 
-  const storageSubtypeByType: Record<string, string[]> = {
-    ssd: ["SATA", "NVMe"],
-    hdd: ["5400rpm", "7200rpm"],
-    hybrid: ["SSHD"],
-  };
-
-  const storageCapBySubtype: Record<string, string[]> = {
-    SATA: ["128GB", "256GB", "512GB", "1TB", "2TB"],
-    NVMe: ["256GB", "512GB", "1TB", "2TB"],
-    "5400rpm": ["500GB", "1TB", "2TB"],
-    "7200rpm": ["1TB", "2TB"],
-    SSHD: ["1TB", "2TB"],
-  };
+  // Storage: capacity will be free-text; no sub-type
 
   const gpuBrandByType: Record<string, string[]> = {
     Integrated: ["Intel", "AMD"],
@@ -310,6 +305,66 @@ export default function NewComputerModal({
 
   const [warranty, setWarranty] = useState<string>("");
 
+  // Brand and Model options
+  const brandOptions = [
+    "Dell",
+    "HP",
+    "Lenovo",
+    "Apple",
+    "Asus",
+    "Acer",
+    "MSI",
+    "Microsoft (Surface)",
+    "Samsung",
+    "Razer",
+    "Toshiba",
+    "Huawei",
+    "Gigabyte",
+    "LG",
+  ];
+
+  const modelOptionsByBrand: Record<string, string[]> = {
+    Dell: ["Inspiron", "Vostro", "Latitude", "XPS", "Precision", "G Series", "Alienware"],
+    HP: [
+      "HP Laptop (Generic line)",
+      "HP 15 / HP 17",
+      "HP Stream",
+      "HP Pavilion",
+      "HP Envy",
+      "HP Spectre",
+      "HP ProBook",
+      "HP EliteBook",
+      "HP Elite Dragonfly",
+      "HP Victus",
+      "HP Omen",
+      "HP ZBook",
+    ],
+    Lenovo: ["IdeaPad", "ThinkPad", "Yoga", "Legion", "ThinkBook", "Chromebook", "Flex"],
+    Apple: ["MacBook Air", "MacBook Pro", "iMac"],
+    Asus: ["ZenBook", "VivoBook", "ROG", "TUF"],
+    Acer: ["Aspire", "Swift", "Spin", "Nitro", "Predator", "TravelMate", "Chromebook"],
+    MSI: [
+      "Modern",
+      "Prestige",
+      "Summit",
+      "Katana",
+      "Thin",
+      "Sword",
+      "Stealth",
+      "Raider",
+      "Titan",
+      "Creator",
+    ],
+    "Microsoft (Surface)": ["Surface Laptop", "Surface Pro", "Surface Book", "Surface Go"],
+    Samsung: ["Galaxy Book", "Notebook 9", "Notebook 7", "Notebook 5", "Odyssey"],
+    Razer: ["Blade 14", "Blade 15", "Blade 16", "Blade 18", "Blade Stealth"],
+    Toshiba: ["Satellite", "Tecra", "Portégé", "Qosmio", "Dynabook"],
+    Huawei: ["MateBook D", "MateBook X", "MateBook 13", "MateBook 14", "MateBook 16"],
+    Gigabyte: ["AERO", "AORUS", "G5", "G7", "U4", "U7"],
+    LG: ["Gram", "Ultra PC"],
+  };
+
+
   async function handleGeneratePost() {
     const title = [uSpecs.brand, series, model].filter(Boolean).join(" ");
     let post: string;
@@ -321,8 +376,8 @@ export default function NewComputerModal({
           .join(" ")}`,
       (ramType || ramCapacity) &&
         `Memory: ${[ramType, ramCapacity].filter(Boolean).join(" ")}`,
-      (storageTypeMain || storageSubtype || storageCapacity) &&
-        `Storage: ${[storageTypeMain, storageSubtype, storageCapacity]
+      (storageTypeMain || storageCapacity) &&
+        `Storage: ${[storageTypeMain, storageCapacity]
           .filter(Boolean)
           .join(" ")}`,
       (screenSize || resolution || refreshRate) &&
@@ -334,7 +389,7 @@ export default function NewComputerModal({
           .filter(Boolean)
           .join(" ")}`,
       warranty && `Warranty: ${warranty}`,
-      additionalSpecs && `Notes: ${additionalSpecs}`,
+      extraItems.length > 0 && `Notes: ${extraItems.join(", ")}`,
       `Price: ${uPrice ? `${uPrice} Birr` : "—"}`,
     ].filter(Boolean);
     post = `📦 ${title || "Laptop"}\n\n${parts.join("\n")}`;
@@ -360,124 +415,132 @@ export default function NewComputerModal({
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">
-              Price ($)
-            </label>
-            <input
-              type="number"
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 appearance-none focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none appearance-none"
-              value={uPrice}
-              onChange={(e) => {
-                const value = e.target.value;
-                setUPrice(value === "" ? "" : Number(value));
-              }}
-            />
-          </div>
-          <div className="flex items-center gap-3 md:col-span-2">
-            <input
-              id="u-neg"
-              type="checkbox"
-              checked={uNegotiable}
-              onChange={(e) => setUNegotiable(e.target.checked)}
-              className="rounded border-slate-400 text-blue-600 focus:ring-blue-300"
-            />
-            <label
-              htmlFor="u-neg"
-              className="text-sm font-medium text-slate-700"
-            >
-              <i className="fa-regular fa-handshake mr-2" />
-              Price is negotiable
-            </label>
-          </div>
-          {/* Brand (mandatory) */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Brand</label>
-            <select
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-              value={uSpecs.brand}
-              onChange={(e) => {
-                setUSpecs((prev) => ({ ...prev, brand: e.target.value }));
-                setModel("");
-              }}
-            >
-              <option value="">Select Brand</option>
-              {["Dell", "HP", "Lenovo", "Apple", "Asus"].map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Basic Info */}
+          <div className="md:col-span-2 rounded-2xl border border-slate-200 p-4">
+            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Basic Info
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Brand (mandatory) */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Brand
+                </label>
+                <div className="relative">
+                  <input
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-700 focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none"
+                    value={brandQuery || uSpecs.brand}
+                    onChange={(e) => {
+                      setBrandQuery(e.target.value);
+                      setUSpecs((prev) => ({ ...prev, brand: e.target.value }));
+                      setModel("");
+                    }}
+                    onFocus={() => setBrandOpen(true)}
+                    onBlur={() => setTimeout(() => setBrandOpen(false), 100)}
+                    placeholder="Search brand..."
+                  />
+                  {brandOpen && (
+                    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                      {(brandOptions || [])
+                        .filter((b) =>
+                          (brandQuery || "").length === 0
+                            ? true
+                            : b.toLowerCase().includes(brandQuery.toLowerCase())
+                        )
+                        .map((b) => (
+                          <button
+                            type="button"
+                            key={b}
+                            className="block w-full text-left px-4 py-2 hover:bg-slate-50"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setUSpecs((prev) => ({ ...prev, brand: b }));
+                              setBrandQuery("");
+                              setModel("");
+                              setBrandOpen(false);
+                            }}
+                          >
+                            {b}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-          {/* Model (depends on Brand) */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Model</label>
-            <select
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              disabled={!uSpecs.brand}
-            >
-              <option value="">Select Model</option>
-              {(
-                {
-                  Dell: ["XPS", "Latitude", "Inspiron", "Vostro", "Alienware"],
-                  HP: ["Pavilion", "EliteBook", "ProBook", "Omen", "Spectre"],
-                  Lenovo: ["ThinkPad", "IdeaPad", "Legion", "Yoga"],
-                  Apple: ["MacBook Air", "MacBook Pro", "iMac"],
-                  Asus: ["ZenBook", "VivoBook", "ROG", "TUF"],
-                } as Record<string, string[]>
-              )[uSpecs.brand]
-                ? (
-                    {
-                      Dell: [
-                        "XPS",
-                        "Latitude",
-                        "Inspiron",
-                        "Vostro",
-                        "Alienware",
-                      ],
-                      HP: [
-                        "Pavilion",
-                        "EliteBook",
-                        "ProBook",
-                        "Omen",
-                        "Spectre",
-                      ],
-                      Lenovo: ["ThinkPad", "IdeaPad", "Legion", "Yoga"],
-                      Apple: ["MacBook Air", "MacBook Pro", "iMac"],
-                      Asus: ["ZenBook", "VivoBook", "ROG", "TUF"],
-                    } as Record<string, string[]>
-                  )[uSpecs.brand].map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))
-                : null}
-            </select>
+              {/* Model */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Model
+                </label>
+                <div className="relative">
+                  <input
+                    disabled={!uSpecs.brand}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-700 disabled:bg-slate-100 disabled:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none"
+                    value={modelQuery || model}
+                    onChange={(e) => {
+                      setModelQuery(e.target.value);
+                      setModel(e.target.value);
+                    }}
+                    onFocus={() => setModelOpen(true)}
+                    onBlur={() => setTimeout(() => setModelOpen(false), 100)}
+                    placeholder={uSpecs.brand ? "Search model..." : "Select brand first"}
+                  />
+                  {modelOpen && !!uSpecs.brand && (
+                    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                      {(modelOptionsByBrand[uSpecs.brand] || [])
+                        .filter((m) =>
+                          (modelQuery || "").length === 0
+                            ? true
+                            : m.toLowerCase().includes(modelQuery.toLowerCase())
+                        )
+                        .map((m) => (
+                          <button
+                            type="button"
+                            key={m}
+                            className="block w-full text-left px-4 py-2 hover:bg-slate-50"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setModel(m);
+                              setModelQuery("");
+                              setModelOpen(false);
+                            }}
+                          >
+                            {m}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Condition */}
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium text-slate-700">
+          <div className="md:col-span-2 rounded-2xl border border-slate-200 p-4">
+            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Condition
-            </label>
-            <select
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-              value={condition}
-              onChange={(e) => setCondition(e.target.value)}
-            >
-              <option value="">Select Condition</option>
-              <option value="New">New</option>
-              <option value="Like New">Like New</option>
-              <option value="Used">Used</option>
-              <option value="Refurbished">Refurbished</option>
-            </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                Condition
+              </label>
+              <select
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                value={condition}
+                onChange={(e) => setCondition(e.target.value)}
+              >
+                <option value="">Select Condition</option>
+                <option value="New">New</option>
+                <option value="Like New">Like New</option>
+                <option value="Used">Used</option>
+                <option value="Refurbished">Refurbished</option>
+              </select>
+            </div>
           </div>
 
           {/* CPU Section */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
             <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
               CPU
             </div>
@@ -524,22 +587,12 @@ export default function NewComputerModal({
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-slate-600">Generation</label>
-                <select
+                <input
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
                   value={cpuGeneration}
-                  onChange={(e) => {
-                    setCpuGeneration(e.target.value);
-                    setCpuModel("");
-                  }}
-                  disabled={!cpuSeries}
-                >
-                  <option value="">Select</option>
-                  {(cpuSeries ? cpuGenBySeries[cpuSeries] : []).map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(e) => setCpuGeneration(e.target.value)}
+                  placeholder="e.g., 4th Gen, 10th Gen, Zen 3, M3"
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-slate-600">Model</label>
@@ -548,14 +601,13 @@ export default function NewComputerModal({
                   value={cpuModel}
                   onChange={(e) => setCpuModel(e.target.value)}
                   placeholder="e.g., 14900HX, 11800H, 7530U"
-                  disabled={!cpuGeneration}
                 />
               </div>
             </div>
           </div>
 
           {/* Memory Section */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
             <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Memory
             </div>
@@ -598,7 +650,7 @@ export default function NewComputerModal({
           </div>
 
           {/* Storage Section */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
             <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Storage
             </div>
@@ -610,68 +662,31 @@ export default function NewComputerModal({
                   value={storageTypeMain}
                   onChange={(e) => {
                     setStorageTypeMain(e.target.value);
-                    setStorageSubtype("");
                     setStorageCapacity("");
                   }}
                 >
                   <option value="">Select</option>
-                  {Object.keys(storageSubtypeByType).map((t) => (
+                  {["SSD", "HDD", "Hybrid"].map((t) => (
                     <option key={t} value={t}>
-                      {t.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-slate-600">Sub-type</label>
-                <select
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                  value={storageSubtype}
-                  onChange={(e) => {
-                    setStorageSubtype(e.target.value);
-                    setStorageCapacity("");
-                  }}
-                  disabled={!storageTypeMain}
-                >
-                  <option value="">Select</option>
-                  {(storageTypeMain
-                    ? storageSubtypeByType[
-                        storageTypeMain as keyof typeof storageSubtypeByType
-                      ]
-                    : []
-                  ).map((st) => (
-                    <option key={st} value={st}>
-                      {st}
+                      {t}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-slate-600">Capacity</label>
-                <select
+                <input
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
                   value={storageCapacity}
                   onChange={(e) => setStorageCapacity(e.target.value)}
-                  disabled={!storageSubtype}
-                >
-                  <option value="">Select</option>
-                  {(storageSubtype
-                    ? storageCapBySubtype[
-                        storageSubtype as keyof typeof storageCapBySubtype
-                      ]
-                    : []
-                  ).map((cap) => (
-                    <option key={cap} value={cap}>
-                      {cap}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="e.g., 128GB, 256GB, 512GB, 1TB"
+                />
               </div>
             </div>
           </div>
 
           {/* Display Section */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
             <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Display
             </div>
@@ -715,7 +730,7 @@ export default function NewComputerModal({
           </div>
 
           {/* GPU Section */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
             <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Graphics
             </div>
@@ -799,7 +814,7 @@ export default function NewComputerModal({
           </div>
 
           {/* Warranty */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
             <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Warranty
             </div>
@@ -822,61 +837,119 @@ export default function NewComputerModal({
             </div>
           </div>
 
-          {/* Other specs */}
-          {[
-            {
-              label: "RAM",
-              key: "ram",
-              options: ["4GB", "8GB", "16GB", "32GB"],
-            },
-            {
-              label: "Storage Type",
-              key: "storageType",
-              options: ["SSD", "HDD", "Hybrid"],
-            },
-            {
-              label: "Storage Size",
-              key: "storageSize",
-              options: ["128GB", "256GB", "512GB", "1TB"],
-            },
-            {
-              label: "Processor",
-              key: "processor",
-              options: ["Intel i5", "Intel i7", "AMD Ryzen 5", "M1/M2"],
-            },
-          ].map((spec: any) => (
-            <div key={spec.key} className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                {spec.label}
-              </label>
-              <select
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
-                value={(uSpecs as any)[spec.key]}
-                onChange={(e) =>
-                  setUSpecs((prev) => ({ ...prev, [spec.key]: e.target.value }))
-                }
-              >
-                <option value="">Select {spec.label}</option>
-                {spec.options.map((opt: string) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+          {/* Other Specs */}
+          <div className="md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
+            <div className="mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Other Specs
             </div>
-          ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[
+                {
+                  label: "RAM",
+                  key: "ram",
+                  options: ["4GB", "8GB", "16GB", "32GB"],
+                },
+                {
+                  label: "Storage Type",
+                  key: "storageType",
+                  options: ["SSD", "HDD", "Hybrid"],
+                },
+                {
+                  label: "Storage Size",
+                  key: "storageSize",
+                  options: ["128GB", "256GB", "512GB", "1TB"],
+                },
+                {
+                  label: "Processor",
+                  key: "processor",
+                  options: ["Intel i5", "Intel i7", "AMD Ryzen 5", "M1/M2"],
+                },
+              ].map((spec: any) => (
+                <div key={spec.key} className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">
+                    {spec.label}
+                  </label>
+                  <select
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                    value={(uSpecs as any)[spec.key]}
+                    onChange={(e) =>
+                      setUSpecs((prev) => ({
+                        ...prev,
+                        [spec.key]: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Select {spec.label}</option>
+                    {spec.options.map((opt: string) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Additional Specifications (optional) */}
-          <div className="space-y-2 md:col-span-2">
+          <div className="space-y-2 md:col-span-2 rounded-2xl border-2 border-slate-300 bg-slate-50 p-4 shadow-sm">
             <label className="text-sm font-medium text-slate-700">
               Additional Specifications (optional)
             </label>
-            <textarea
-              className="min-h-24 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none resize-none"
-              value={additionalSpecs}
-              onChange={(e) => setAdditionalSpecs(e.target.value)}
-              placeholder="Any extra details..."
-            />
+            <div className="flex gap-2">
+              <input
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+                value={extraInput}
+                onChange={(e) => setExtraInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const v = extraInput.trim();
+                    if (v)
+                      setExtraItems((prev) =>
+                        prev.includes(v) ? prev : [...prev, v]
+                      );
+                    setExtraInput("");
+                  }
+                }}
+                placeholder="Type a spec/feature and press Enter (e.g., Backlit Keyboard, Wi‑Fi 6)"
+              />
+              <button
+                type="button"
+                className="shrink-0 rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white"
+                onClick={() => {
+                  const v = extraInput.trim();
+                  if (!v) return;
+                  setExtraItems((prev) =>
+                    prev.includes(v) ? prev : [...prev, v]
+                  );
+                  setExtraInput("");
+                }}
+              >
+                Add
+              </button>
+            </div>
+            {!!extraItems.length && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {extraItems.map((it) => (
+                  <span
+                    key={it}
+                    className="inline-flex items-center gap-2 rounded-full border bg-slate-50 px-3 py-1 text-xs"
+                  >
+                    {it}
+                    <button
+                      type="button"
+                      className="rounded bg-slate-200 px-1 text-[10px]"
+                      onClick={() =>
+                        setExtraItems((prev) => prev.filter((x) => x !== it))
+                      }
+                      aria-label={`Remove ${it}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <div className="space-y-2 md:col-span-2">
             <label className="text-sm font-medium text-slate-700">
@@ -924,6 +997,37 @@ export default function NewComputerModal({
               </div>
             )}
           </div>
+          {/* Price and Negotiation */}
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm font-medium text-slate-700">
+              Price (Birr)
+            </label>
+            <input
+              type="number"
+              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200 outline-none"
+              value={uPrice}
+              onChange={(e) => {
+                const value = e.target.value;
+                setUPrice(value === "" ? "" : Number(value));
+              }}
+            />
+          </div>
+          <div className="flex items-center gap-3 md:col-span-2">
+            <input
+              id="u-neg"
+              type="checkbox"
+              checked={uNegotiable}
+              onChange={(e) => setUNegotiable(e.target.checked)}
+              className="rounded border-slate-400 text-blue-600 focus:ring-blue-300"
+            />
+            <label
+              htmlFor="u-neg"
+              className="text-sm font-medium text-slate-700"
+            >
+              <i className="fa-regular fa-handshake mr-2" />
+              Price is negotiable
+            </label>
+          </div>
         </div>
         <div className="flex justify-end gap-3 mt-4">
           <button
@@ -937,10 +1041,10 @@ export default function NewComputerModal({
             className="rounded-xl border border-blue-300 bg-white px-6 py-3 text-blue-700 font-medium hover:bg-blue-50 hover:scale-105 transition"
             onClick={handleGeneratePost}
           >
-            🚀 Generate Post
+            Generate Post
           </button>
           <button
-            className="rounded-xl bg-linear-to-r from-blue-500 to-purple-600 px-6 py-3 text-white font-medium hover:shadow-lg hover:scale-105 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            className="rounded-xl bg-black px-6 py-3 text-white font-medium hover:shadow-lg hover:scale-105 transition disabled:opacity-60 disabled:cursor-not-allowed"
             onClick={addAndClose}
             disabled={!uSpecs.brand}
           >
