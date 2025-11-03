@@ -514,7 +514,7 @@ export default function DashboardPage() {
               </p>
               {listingToDelete.price && (
                 <p className="text-sm text-gray-600 mt-1">
-                  ${listingToDelete.price.toLocaleString()}
+                  {listingToDelete.price.toLocaleString()} ETB
                 </p>
               )}
             </div>
