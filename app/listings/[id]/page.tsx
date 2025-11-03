@@ -140,7 +140,7 @@ export default function ListingDetail({ params }: { params: Promise<{ id: string
             </h1>
             
             <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-6">
-              ${listing.price?.toLocaleString()}
+              {listing.price?.toLocaleString()} ETB
             </div>
             
             {listing.description && (

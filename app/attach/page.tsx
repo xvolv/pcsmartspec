@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
 import {
   useRouter,
   useSearchParams,
@@ -57,7 +57,7 @@ interface FormData {
   description: string;
 }
 
-export default function AttachListing() {
+function AttachListingContent() {
   const router = useRouter();
   const searchParams = useSearchParams() as ReadonlyURLSearchParams;
   const [isLoading, setIsLoading] = useState(true);
@@ -1194,4 +1194,19 @@ function formatScanTime(dateStr: string) {
     console.error("❌ Error formatting date:", error);
     return "Error formatting date";
   }
+}
+
+export default function AttachListing() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AttachListingContent />
+    </Suspense>
+  );
 }

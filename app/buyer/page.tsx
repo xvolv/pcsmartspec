@@ -116,7 +116,7 @@ export default function BuyerPage() {
                   <div className="text-base font-bold text-gray-900 line-clamp-2 leading-tight">{l.Model}</div>
                 </div>
                 <div className="flex-shrink-0 text-right">
-                  <div className="text-lg font-bold text-blue-600 whitespace-nowrap">${l.price?.toLocaleString()}</div>
+                  <div className="text-lg font-bold text-blue-600 whitespace-nowrap">{l.price?.toLocaleString()} ETB</div>
                 </div>
               </div>
 

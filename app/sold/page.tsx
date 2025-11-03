@@ -80,9 +80,9 @@ export default function SoldPage() {
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price) + " ETB";
   };
 
   const getPCSpecs = (snapshot: any) => {

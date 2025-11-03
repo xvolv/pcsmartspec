@@ -50,7 +50,6 @@ export default function Navbar() {
     { href: "/dashboard", icon: "fa-gauge", label: "Dashboard" },
     { href: "/analytics", icon: "fa-chart-column", label: "Analytics" },
     { href: "/sold", icon: "fa-circle-check", label: "Sold" },
-    { href: "/orders", icon: "fa-receipt", label: "Orders" },
     { href: "/attach", icon: "fa-receipt", label: "Attach" },
   ];
 

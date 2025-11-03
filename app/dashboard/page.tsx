@@ -384,7 +384,7 @@ export default function DashboardPage() {
                     </div>
                     {listing.price && (
                       <div className="text-xl font-bold text-blue-600 ml-2">
-                        ${listing.price.toLocaleString()}
+                        {listing.price.toLocaleString()} ETB
                       </div>
                     )}
                   </div>
@@ -451,12 +451,11 @@ export default function DashboardPage() {
             </svg>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No listings found</h3>
             <p className="text-gray-600 mb-6">
-              {filter === 'all' 
-                ? "Get started by creating your first listing"
-                : `No ${filter} listings yet`
-              }
+              {searchQuery
+                ? "No listings match your search criteria"
+                : "Get started by creating your first listing"}
             </p>
-            {filter === 'all' && (
+            {!searchQuery && (
               <button
                 onClick={() => setUploadOpen(true)}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 transition-colors"

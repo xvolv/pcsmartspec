@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
@@ -21,7 +21,7 @@ interface Listing {
   images: string[] | null;
 }
 
-export default function GenerateReceiptPage() {
+function GenerateReceiptContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const listingId = searchParams.get("listingId");
@@ -244,7 +244,7 @@ export default function GenerateReceiptPage() {
             {listing.price && (
               <div className="col-span-2">
                 <span className="text-gray-600">Listed Price:</span>{" "}
-                <span className="font-medium">${listing.price.toLocaleString()}</span>
+                <span className="font-medium">{listing.price.toLocaleString()} ETB</span>
               </div>
             )}
           </div>
@@ -363,6 +363,25 @@ export default function GenerateReceiptPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function GenerateReceiptPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    }>
+      <GenerateReceiptContent />
+    </Suspense>
   );
 }
 
