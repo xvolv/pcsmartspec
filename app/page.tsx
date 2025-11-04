@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { isAuthenticated } from "@/lib/auth/utils";
 
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -86,7 +87,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
+                placeholder="Enter your email"
                 required
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-700 placeholder-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none transition-all duration-200"
               />
@@ -105,7 +106,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your 6-digit password"
+                  placeholder="Enter your password"
                   required
                   inputMode="numeric"
                   pattern="\d{6}"
@@ -178,11 +179,7 @@ export default function LoginPage() {
                 "Sign in"
               )}
             </button>
-            <div className="mt-4 text-center text-sm">
-              <Link href="/admin/add-user" className="text-slate-600 hover:text-slate-800">
-                Add user
-              </Link>
-            </div>
+       
           </form>
         </div>
       </div>

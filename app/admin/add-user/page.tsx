@@ -1,4 +1,5 @@
 "use client";
+import Navbar from "@/app/components/Navbar";
 import { useState } from "react";
 
 export default function AddUserPage() {
@@ -36,16 +37,22 @@ export default function AddUserPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 px-4">
+      <Navbar />
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-slate-800">Add User</h1>
-          <p className="text-slate-500 mt-2 text-sm">Create a test user to sign in.</p>
+          <p className="text-slate-500 mt-2 text-sm">
+            Create a test user to sign in.
+          </p>
         </div>
 
         <div className="rounded-2xl bg-white/90 backdrop-blur-sm p-6 shadow-sm border border-slate-200/60">
           <form onSubmit={onSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm text-slate-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm text-slate-700 mb-2"
+              >
                 Email
               </label>
               <input
@@ -60,8 +67,11 @@ export default function AddUserPage() {
             </div>
 
             <div>
-              <label htmlFor="code" className="block text-sm text-slate-700 mb-2">
-                6-digit code
+              <label
+                htmlFor="code"
+                className="block text-sm text-slate-700 mb-2"
+              >
+                Assign password
               </label>
               <input
                 id="code"
@@ -76,8 +86,6 @@ export default function AddUserPage() {
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-700 placeholder-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none transition-all duration-200"
               />
             </div>
-
-            
 
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

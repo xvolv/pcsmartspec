@@ -55,11 +55,18 @@ export default function Navbar() {
     router.push("/");
   };
 
+       <div className="mt-4 text-center text-sm">
+              <Link href="/admin/add-user" className="text-slate-600 hover:text-slate-800">
+                Add user
+              </Link>
+            </div>
+
   const menuItems = [
     { href: "/dashboard", icon: "fa-gauge", label: "Dashboard" },
     { href: "/analytics", icon: "fa-chart-column", label: "Analytics" },
     { href: "/sold", icon: "fa-circle-check", label: "Sold" },
     { href: "/attach", icon: "fa-receipt", label: "Attach" },
+    { href: "/admin/add-user", icon: "fa-user-plus", label: "Add User" },
   ];
 
 
