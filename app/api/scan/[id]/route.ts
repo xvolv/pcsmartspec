@@ -8,50 +8,45 @@ export async function GET(
   try {
     // Await the params to get the ID
     const { id } = await context.params;
-    
+
     if (!id) {
-      console.error('❌ No ID provided in request');
       return new Response(
         JSON.stringify({ status: 'error', error: 'No scan ID provided' }),
-        { 
-          status: 400, 
-          headers: { 
+        {
+          status: 400,
+          headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
-          } 
+          }
         }
       );
     }
-    
-    console.log(`🔍 Fetching scan data for ID: ${id}`);
-    
+
     // Get the scan data from the shared store
     const scanData = await getScan(id);
-    
+
     if (!scanData) {
-      console.error(`❌ Scan not found: ${id}`);
       return new Response(
-        JSON.stringify({ 
-          status: 'error', 
+        JSON.stringify({
+          status: 'error',
           error: 'Scan not found',
           requestedId: id,
           timestamp: new Date().toISOString()
         }),
-        { 
-          status: 404, 
-          headers: { 
+        {
+          status: 404,
+          headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
             'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
             'Pragma': 'no-cache',
             'Expires': '0',
             'Surrogate-Control': 'no-store'
-          } 
+          }
         }
       );
     }
-    
-    console.log(`✅ Found scan data for ID: ${id}`);
+
     return new Response(JSON.stringify({
       status: 'ok',
       data: scanData,
@@ -67,12 +62,11 @@ export async function GET(
         'Surrogate-Control': 'no-store'
       },
     });
-    
+
   } catch (error) {
-    console.error('❌ Error in scan API:', error);
     return new Response(
-      JSON.stringify({ 
-        status: 'error', 
+      JSON.stringify({
+        status: 'error',
         error: 'Failed to fetch scan data',
         message: error instanceof Error ? error.message : 'Unknown error'
       }),

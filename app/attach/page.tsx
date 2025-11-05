@@ -97,6 +97,7 @@ function AttachListingContent() {
   const [waitingForScan, setWaitingForScan] = useState<boolean>(false);
   const [refreshTick, setRefreshTick] = useState<number>(0);
   const [editSpecs, setEditSpecs] = useState<boolean>(false);
+  const [editableStorage, setEditableStorage] = useState<StorageItem[]>([]);
 
   // Check for scanner data on component mount
   useEffect(() => {
@@ -111,8 +112,6 @@ function AttachListingContent() {
         const scanId =
           params.get("scanId") || params.get("pc_id") || params.get("id");
 
-        console.log("🔍 Scan ID from URL:", scanId);
-
         setDebugInfo((prev) => ({
           ...prev,
           scanId: scanId || "none",
@@ -120,7 +119,6 @@ function AttachListingContent() {
         }));
 
         if (scanId) {
-          console.log(`🔄 Loading scan data for ID: ${scanId}`);
           // Add a timestamp to prevent caching issues
           const timestamp = new Date().getTime();
           const response = await fetch(`/api/scan/${scanId}?t=${timestamp}`, {
@@ -133,7 +131,6 @@ function AttachListingContent() {
 
           if (!response.ok) {
             const errorText = await response.text();
-            console.error("❌ API Error Response:", errorText);
             // Surface 404 specifically so outer catch can handle it
             if (response.status === 404) {
               throw new Error("404: Scan not found");
@@ -144,15 +141,21 @@ function AttachListingContent() {
           }
 
           const responseData = await response.json();
-          console.log("📦 Fetched scan data:", responseData);
 
           // The actual scan data is in the 'data' property of the response
           const scanData = responseData.data || responseData;
-          console.log("🔍 Raw scan data:", JSON.stringify(scanData, null, 2));
-          console.log("🔍 Scan_Time from API:", scanData.Scan_Time);
 
           setScannerData(scanData);
           setWaitingForScan(false);
+
+          // Initialize editable storage from scan data
+          const initialStorage = (scanData.Storage || []).map((s: StorageItem) => ({
+            Model: s.Model || "",
+            Size_GB: s.Size_GB || 0,
+            Type: s.Type || "",
+            BusType: s.BusType || "",
+          }));
+          setEditableStorage(initialStorage);
 
           // Format storage information
           const storageInfo = (scanData.Storage || [])
@@ -188,7 +191,6 @@ function AttachListingContent() {
           setTitle(
             [scanData.Brand, scanData.Model].filter(Boolean).join(" ").trim()
           );
-          console.log("✅ Form data updated with scan data");
 
           setDebugInfo((prev) => ({
             ...prev,
@@ -201,7 +203,6 @@ function AttachListingContent() {
             },
           }));
         } else {
-          console.log("ℹ️ No scan ID found in URL, trying latest scan");
           // Try to get the latest available scan for cross-device flow
           const timestamp = new Date().getTime();
           const latestResp = await fetch(`/api/scan/latest?t=${timestamp}`, {
@@ -214,10 +215,18 @@ function AttachListingContent() {
           if (latestResp.ok) {
             const latestData = await latestResp.json();
             const scanData = latestData.data || latestData;
-            console.log("📦 Latest scan data:", scanData);
 
             setScannerData(scanData);
             setWaitingForScan(false);
+
+            // Initialize editable storage from latest scan data
+            const initialStorage = (scanData.Storage || []).map((s: StorageItem) => ({
+              Model: s.Model || "",
+              Size_GB: s.Size_GB || 0,
+              Type: s.Type || "",
+              BusType: s.BusType || "",
+            }));
+            setEditableStorage(initialStorage);
 
             const storageInfo = (scanData.Storage || [])
               .map((s: StorageItem) => `${s.Size_GB}GB ${s.Type} ${s.BusType}`)
@@ -258,7 +267,6 @@ function AttachListingContent() {
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
-        console.error("❌ Error loading scanner data:", error);
 
         if (typeof errorMessage === "string" && errorMessage.includes("404")) {
           // Treat 404 as "waiting for a new scan" instead of an error
@@ -320,9 +328,9 @@ function AttachListingContent() {
     );
   }
   const [images, setImages] = useState<string[]>([]);
-  const [guaranteeMonths, setGuaranteeMonths] = useState<number>(12);
+  const [guaranteeMonths, setGuaranteeMonths] = useState<number>(1);
   const [guaranteeProvider, setGuaranteeProvider] =
-    useState<string>("PCSmartSpec");
+    useState<string>("Royal computers");
   const [title, setTitle] = useState<string>("");
   const [price, setPrice] = useState<number | string>("00000");
   const [negotiable, setNegotiable] = useState<boolean>(false);
@@ -363,12 +371,14 @@ function AttachListingContent() {
   );
 
   const totalStorageGB = useMemo(
-    () =>
-      (scannerData?.Storage || []).reduce(
+    () => {
+      const storage = editableStorage.length > 0 ? editableStorage : (scannerData?.Storage || []);
+      return storage.reduce(
         (sum, s) => sum + Number(s.Size_GB || 0),
         0
-      ),
-    [scannerData]
+      );
+    },
+    [scannerData, editableStorage]
   );
   const ramSummary = useMemo(
     () =>
@@ -379,15 +389,16 @@ function AttachListingContent() {
     [scannerData]
   );
   const storageKinds = useMemo(() => {
+    const storage = editableStorage.length > 0 ? editableStorage : (scannerData?.Storage || []);
     const kinds = Array.from(
       new Set(
-        (scannerData?.Storage || []).map((s) =>
+        storage.map((s) =>
           [s.Type, s.BusType].filter(Boolean).join(" ")
         )
       )
     );
     return kinds.filter(Boolean).join(", ");
-  }, [scannerData]);
+  }, [scannerData, editableStorage]);
 
   function onSelectImages(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
@@ -908,22 +919,106 @@ function AttachListingContent() {
                 </div>
                 <div className="mt-4">
                   <div className="text-sm font-medium">Storage</div>
-                  <ul className="mt-2 divide-y rounded-md border bg-zinc-50">
-                    {(scannerData.Storage || []).map((s, i) => (
-                      <li
-                        key={i}
-                        className="grid grid-cols-4 gap-2 p-3 text-sm"
+                  {editSpecs ? (
+                    <div className="mt-2 space-y-2">
+                      {(editableStorage.length > 0 ? editableStorage : scannerData?.Storage || []).map((s, i) => (
+                        <div
+                          key={i}
+                          className="grid grid-cols-1 gap-2 rounded-md border bg-white p-3 sm:grid-cols-4"
+                        >
+                          <div className="sm:col-span-2">
+                            <input
+                              type="text"
+                              placeholder="Model (e.g., Samsung SSD 970)"
+                              value={s.Model || ""}
+                              onChange={(e) => {
+                                const updated = [...editableStorage];
+                                updated[i] = { ...updated[i], Model: e.target.value };
+                                setEditableStorage(updated);
+                              }}
+                              className="w-full rounded-md border p-2 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <input
+                              type="text"
+                              placeholder="Type (e.g., SSD)"
+                              value={s.Type || ""}
+                              onChange={(e) => {
+                                const updated = [...editableStorage];
+                                updated[i] = { ...updated[i], Type: e.target.value };
+                                setEditableStorage(updated);
+                              }}
+                              className="w-full rounded-md border p-2 text-sm"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              placeholder="Size GB"
+                              value={s.Size_GB || ""}
+                              onChange={(e) => {
+                                const updated = [...editableStorage];
+                                updated[i] = { ...updated[i], Size_GB: Number(e.target.value) || 0 };
+                                setEditableStorage(updated);
+                              }}
+                              className="w-full rounded-md border p-2 text-sm"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Bus (e.g., NVMe)"
+                              value={s.BusType || ""}
+                              onChange={(e) => {
+                                const updated = [...editableStorage];
+                                updated[i] = { ...updated[i], BusType: e.target.value };
+                                setEditableStorage(updated);
+                              }}
+                              className="w-full rounded-md border p-2 text-sm"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditableStorage([...editableStorage, { Model: "", Size_GB: 0, Type: "", BusType: "" }]);
+                        }}
+                        className="w-full rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-100"
                       >
-                        <div className="col-span-2 truncate sm:whitespace-normal sm:overflow-visible sm:text-clip">
-                          {s.Model}
-                        </div>
-                        <div>
-                          {s.Type}/{s.BusType}
-                        </div>
-                        <div className="text-right">{s.Size_GB} GB</div>
-                      </li>
-                    ))}
-                  </ul>
+                        + Add Storage Item
+                      </button>
+                      {editableStorage.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (editableStorage.length > 1) {
+                              setEditableStorage(editableStorage.slice(0, -1));
+                            }
+                          }}
+                          className="w-full rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
+                        >
+                          - Remove Last Item
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <ul className="mt-2 divide-y rounded-md border bg-zinc-50">
+                      {(editableStorage.length > 0 ? editableStorage : scannerData?.Storage || []).map((s, i) => (
+                        <li
+                          key={i}
+                          className="grid grid-cols-4 gap-2 p-3 text-sm"
+                        >
+                          <div className="col-span-2 truncate sm:whitespace-normal sm:overflow-visible sm:text-clip">
+                            {s.Model || "N/A"}
+                          </div>
+                          <div>
+                            {s.Type || "N/A"}/{s.BusType || "N/A"}
+                          </div>
+                          <div className="text-right">{s.Size_GB || 0} GB</div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             )}
@@ -1008,7 +1103,7 @@ function AttachListingContent() {
 
             <div className="rounded-xl border bg-white p-5">
               <h2 className="mb-4 text-base font-semibold">Guarantee</h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label className="block text-sm text-zinc-600">
                     Provider
@@ -1029,28 +1124,74 @@ function AttachListingContent() {
                     value={guaranteeMonths}
                     onChange={(e) => setGuaranteeMonths(Number(e.target.value))}
                     className="w-full rounded-md border p-2 text-sm"
+
                   />
                 </div>
-                <div className="flex items-end">
-                  <button className="w-full rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white">
-                    Save Guarantee
-                  </button>
-                </div>
               </div>
-              <p className="mt-3 text-xs text-zinc-500">
-                This is a UI-only mock. No backend calls are made.
-              </p>
             </div>
+
           </section>
         </div>
 
         <div className="mt-8 flex items-center justify-end gap-3">
           <button
             className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            disabled={publishing || !scannerData?.id}
+            disabled={publishing || !scannerData?.id || images.length === 0}
             onClick={async () => {
               try {
+                // Validate images before publishing
+                if (!images || images.length === 0) {
+                  toast.error("Please upload at least one image before publishing.", {
+                    icon: <XCircle className="w-5 h-5 text-red-600" />,
+                  });
+                  return;
+                }
+
                 setPublishing(true);
+
+                // Parse RAM from formData
+                const parseRAM = (ramStr: string) => {
+                  const ramMatch = ramStr.match(/(\d+)GB\s*(.*?)\s*(\d+)MHz/);
+                  if (ramMatch) {
+                    return {
+                      ram_gb: ramMatch[1],
+                      ram_type: ramMatch[2].trim(),
+                      ram_speed_mhz: ramMatch[3],
+                    };
+                  }
+                  // Fallback to scanner data if parsing fails
+                  return {
+                    ram_gb: scannerData?.RAM_GB || null,
+                    ram_type: scannerData?.RAM_Type || null,
+                    ram_speed_mhz: scannerData?.RAM_Speed_MHz || null,
+                  };
+                };
+
+                // Parse Display from formData
+                const parseDisplay = (displayStr: string) => {
+                  const displayMatch = displayStr.match(/(.*?)\s*\((\d+(?:\.\d+)?)"/);
+                  if (displayMatch) {
+                    return {
+                      display_resolution: displayMatch[1].trim(),
+                      screen_size_inch: parseFloat(displayMatch[2]),
+                    };
+                  }
+                  // Fallback to scanner data if parsing fails
+                  return {
+                    display_resolution: scannerData?.Display_Resolution || null,
+                    screen_size_inch: scannerData?.Screen_Size_inch || null,
+                  };
+                };
+
+                const ramData = parseRAM(formData.ram || "");
+                const displayData = parseDisplay(formData.display || "");
+
+                // Use editableStorage if it has been edited, otherwise use scannerData.Storage
+                // Check if editableStorage was initialized and has items
+                const storageToSend = editableStorage.length > 0
+                  ? editableStorage.filter(s => s.Size_GB > 0 || s.Model || s.Type || s.BusType) // Filter out empty items
+                  : (scannerData?.Storage || []);
+
                 const res = await fetch("/api/listings/publish", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -1058,10 +1199,28 @@ function AttachListingContent() {
                     id: scannerData?.id,
                     title,
                     price,
+                    // Send formData overrides
+                    formData: {
+                      brand: formData.brand || undefined,
+                      model: formData.model || undefined,
+                      cpu: formData.cpu || undefined,
+                      ram_gb: ramData.ram_gb || undefined,
+                      ram_type: ramData.ram_type || undefined,
+                      ram_speed_mhz: ramData.ram_speed_mhz || undefined,
+                      cores: formData.cores || undefined,
+                      threads: formData.threads || undefined,
+                      base_speed_mhz: formData.baseSpeedMHz || undefined,
+                      gpu: formData.gpu || undefined,
+                      display_resolution: displayData.display_resolution || undefined,
+                      screen_size_inch: displayData.screen_size_inch || undefined,
+                      os: formData.os || undefined,
+                      storage: storageToSend,
+                    },
                     extras: {
                       condition,
                       negotiable,
-                      guaranteeMonths,
+                      // send null when user cleared the input instead of empty string
+                      guaranteeMonths: typeof guaranteeMonths === "number" && Number.isFinite(guaranteeMonths) ? guaranteeMonths : null,
                       guaranteeProvider,
                       battery: batteryRange === "Other" ? batteryOther : batteryRange,
                       specialFeatures,
@@ -1070,17 +1229,27 @@ function AttachListingContent() {
                   }),
                 });
                 if (!res.ok) {
-                  const t = await res.text();
-                  throw new Error(t || `Failed to publish: ${res.status}`);
+                  const errorData = await res.json().catch(() => ({ error: `Failed to publish: ${res.status}` }));
+                  const errorMessage = errorData?.error || `Failed to publish: ${res.status}`;
+
+                  // User-friendly error messages
+                  if (errorMessage.includes('images') && errorMessage.includes('null')) {
+                    throw new Error("Please upload at least one image before publishing.");
+                  } else if (errorMessage.includes('Please upload at least one image')) {
+                    throw new Error(errorMessage);
+                  } else {
+                    throw new Error(errorMessage);
+                  }
                 }
                 const data = await res.json();
-                toast.success("Listing published. It will now appear on the buyer page.", {
+                toast.success("Listing published successfully.", {
                   icon: <CheckCircle2 className="w-5 h-5 text-green-600" />,
                 });
 
-                // Reset page to waiting mode after successful publish
+                // Reset page to waiting mode after successful publish        
                 setScannerData(null);
                 setWaitingForScan(true);
+                setEditableStorage([]);
                 setFormData({
                   brand: "",
                   model: "",
@@ -1168,10 +1337,7 @@ function StatCard({ title, value }: { title: string; value: string }) {
 
 function formatScanTime(dateStr: string) {
   try {
-    console.log("📅 Formatting date string:", dateStr);
-
     if (!dateStr) {
-      console.warn("⚠️ No date string provided to formatScanTime");
       return "N/A";
     }
 
@@ -1180,7 +1346,6 @@ function formatScanTime(dateStr: string) {
 
     // Check if date is valid
     if (isNaN(date.getTime())) {
-      console.error("❌ Invalid date string:", dateStr);
       return "Invalid date";
     }
 
@@ -1202,11 +1367,9 @@ function formatScanTime(dateStr: string) {
     });
 
     const formattedDate = `${etDate}, ${etTime} (EAT)`;
-    console.log("✅ Formatted date:", formattedDate);
 
     return formattedDate;
   } catch (error) {
-    console.error("❌ Error formatting date:", error);
     return "Error formatting date";
   }
 }

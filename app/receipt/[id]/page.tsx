@@ -245,7 +245,6 @@ export default function ReceiptViewPage() {
                 setDefaultFileName(defaultFileName);
                 setShowFileNameDialog(true);
 
-                console.log('PDF generated, ready for download');
             } catch (canvasError) {
                 // Remove the override style even if there's an error
                 if (document.head.contains(overrideStyle)) {

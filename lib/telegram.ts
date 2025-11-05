@@ -29,7 +29,6 @@ function formatChannelId(channelId: string): string {
     // For supergroup/channel IDs, they need -100 prefix
     // Telegram supergroups/channels have IDs like -1001234567890
     const formattedId = `-100${numId}`;
-    console.log(`📱 Formatted group/channel ID: ${channelId} -> ${formattedId}`);
     return formattedId;
   }
 
@@ -54,7 +53,6 @@ async function tryChannelIds(channelIds: string[]): Promise<string | null> {
       const data = await response.json();
 
       if (data.ok) {
-        console.log(`✅ Found working channel ID: ${channelId}`);
         return channelId;
       }
     } catch (error) {
@@ -73,7 +71,6 @@ let RESOLVED_CHANNEL_ID: string | null = null;
 
 // Debug logging
 if (TELEGRAM_BOT_TOKEN) {
-  console.log(`📱 Telegram Bot configured for channel: ${TELEGRAM_CHANNEL_ID}`);
 
   // Try to resolve the correct channel ID format
   if (TELEGRAM_CHANNEL_ID_RAW && !TELEGRAM_CHANNEL_ID_RAW.startsWith('@')) {
@@ -87,7 +84,6 @@ if (TELEGRAM_BOT_TOKEN) {
       ];
 
       // Note: We'll resolve this on first use since we can't await at module level
-      console.log(`📱 Will try channel ID formats: ${formats.join(', ')}`);
     }
   }
 } else {
@@ -393,7 +389,6 @@ async function resolveChannelId(): Promise<string> {
 
   if (resolvedId) {
     RESOLVED_CHANNEL_ID = resolvedId;
-    console.log(`✅ Resolved group/channel ID: ${resolvedId}`);
     return resolvedId;
   }
 
@@ -425,7 +420,6 @@ async function testChannelAccess(): Promise<boolean> {
     const data = await response.json();
 
     if (data.ok) {
-      console.log(`✅ Bot can access channel: ${data.result.title || data.result.username || channelId}`);
       return true;
     } else {
       console.error(`❌ Bot cannot access channel: ${data.description || 'Unknown error'}`);
@@ -461,14 +455,12 @@ export async function sendListingToTelegram(listing: ListingData): Promise<boole
     if (images.length > 0) {
       const success = await sendMediaGroup(images, message);
       if (success) {
-        console.log('✅ Listing sent to Telegram channel successfully');
         return true;
       }
     } else {
       // If no images, just send the text message
       const success = await sendMessage(message);
       if (success) {
-        console.log('✅ Listing sent to Telegram channel successfully');
         return true;
       }
     }

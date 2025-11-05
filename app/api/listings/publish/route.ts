@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       return urls;
     };
 
-    // Branch 1: scan-backed publish (existing behavior)
+        // Branch 1: scan-backed publish (existing behavior)
     if (id) {
       const scan = await getScan(id as string);
       if (!scan) {
@@ -62,32 +62,53 @@ export async function POST(req: Request) {
 
       const imageUrls = await uploadImages(String(id), images);
 
+      // Validate that at least one image is required
+      if (!imageUrls || imageUrls.length === 0) {
+        return NextResponse.json(
+          { status: 'error', error: 'Please upload at least one image before publishing.' },
+          { status: 400 }
+        );
+      }
+
+      // Use formData overrides if provided, otherwise use scan data
+      const formDataOverrides = body.formData || {};
+      
+      // Helper to use override or fallback to scan data
+      const useOverride = <T>(override: T | undefined, fallback: T): T => {
+        return override !== undefined ? override : fallback;
+      };
+
+      // Parse storage - use formData storage if provided, otherwise scan.Storage
+      const storage = formDataOverrides.storage !== undefined 
+        ? (Array.isArray(formDataOverrides.storage) ? formDataOverrides.storage : [])
+        : (scan.Storage ? JSON.parse(JSON.stringify(scan.Storage)) : []);
+
       const payload = {
         scan_id: id,
-        title: title ?? `${scan.Brand} ${scan.Model}`,
+        title: title ?? `${formDataOverrides.brand || scan.Brand} ${formDataOverrides.model || scan.Model}`,
         price: String(price ?? ''),
         status: 'published',
-        brand: scan.Brand,
-        model: scan.Model,
-        cpu: scan.CPU,
-        cores: (scan as any).Cores ?? null,
-        threads: (scan as any).Threads ?? null,
-        base_speed_mhz: (scan as any).BaseSpeed_MHz ?? null,
-        ram_gb: scan.RAM_GB,
-        ram_type: scan.RAM_Type,
-        ram_speed_mhz: scan.RAM_Speed_MHz,
-        storage: scan.Storage ? JSON.parse(JSON.stringify(scan.Storage)) : [],
-        gpu: scan.GPU,
-        display_resolution: scan.Display_Resolution,
-        screen_size_inch: scan.Screen_Size_inch,
-        os: scan.OS,
-        images: imageUrls.length ? imageUrls : null,
+        brand: useOverride(formDataOverrides.brand, scan.Brand),
+        model: useOverride(formDataOverrides.model, scan.Model),
+        cpu: useOverride(formDataOverrides.cpu, scan.CPU),
+        cores: useOverride(formDataOverrides.cores, (scan as any).Cores ?? null),
+        threads: useOverride(formDataOverrides.threads, (scan as any).Threads ?? null),
+        base_speed_mhz: useOverride(formDataOverrides.base_speed_mhz, (scan as any).BaseSpeed_MHz ?? null),
+        ram_gb: useOverride(formDataOverrides.ram_gb, scan.RAM_GB),
+        ram_type: useOverride(formDataOverrides.ram_type, scan.RAM_Type),
+        ram_speed_mhz: useOverride(formDataOverrides.ram_speed_mhz, scan.RAM_Speed_MHz),
+        storage: storage,
+        gpu: useOverride(formDataOverrides.gpu, scan.GPU),
+        display_resolution: useOverride(formDataOverrides.display_resolution, scan.Display_Resolution),
+        screen_size_inch: useOverride(formDataOverrides.screen_size_inch, scan.Screen_Size_inch),
+        os: useOverride(formDataOverrides.os, scan.OS),
+        images: imageUrls.length > 0 ? imageUrls : [],
         extras: extras || null,
         condition: extras?.condition ?? null,
-        negotiable: typeof extras?.negotiable === 'boolean' ? extras.negotiable : null,
+        negotiable: typeof extras?.negotiable === 'boolean' ? extras.negotiable : null,                                                                         
         battery: extras?.battery ?? null,
-        special_features: Array.isArray(extras?.specialFeatures) ? extras.specialFeatures : null,
-        guarantee_months: Number.isFinite(extras?.guaranteeMonths) ? extras.guaranteeMonths : null,
+        special_features: Array.isArray(extras?.specialFeatures) ? extras.specialFeatures : null,                                                               
+        guarantee_months: Number.isFinite(extras?.guaranteeMonths) ? extras.guaranteeMonths : null,                                                             
         guarantee_provider: extras?.guaranteeProvider ?? null,
         published_at: new Date().toISOString(),
       } as any;
@@ -178,7 +199,15 @@ export async function POST(req: Request) {
 
     const manualTitle = title || [brand, series, model].filter(Boolean).join(' ').trim() || null;
 
-    const imageUrls = await uploadImages(manualTitle || 'manual', images);
+          const imageUrls = await uploadImages(manualTitle || 'manual', images);      
+
+    // Validate that at least one image is required
+    if (!imageUrls || imageUrls.length === 0) {
+      return NextResponse.json(
+        { status: 'error', error: 'Please upload at least one image before publishing.' },
+        { status: 400 }
+      );
+    }
 
     const payload = {
       scan_id: null,
@@ -199,7 +228,7 @@ export async function POST(req: Request) {
       display_resolution,
       screen_size_inch,
       os: null,
-      images: imageUrls.length ? imageUrls : null,
+      images: imageUrls,
       condition,
       negotiable,
       battery,
