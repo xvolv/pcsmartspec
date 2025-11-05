@@ -333,6 +333,7 @@ function AttachListingContent() {
     useState<string>("Royal computers");
   const [title, setTitle] = useState<string>("");
   const [price, setPrice] = useState<number | string>("00000");
+  const INITIAL_PRICE = "00000";
   const [negotiable, setNegotiable] = useState<boolean>(false);
   const [condition, setCondition] = useState<string>("New");
   const [specialFeatures, setSpecialFeatures] = useState<string[]>([]);
@@ -432,7 +433,22 @@ function AttachListingContent() {
   }
 
   function onAttach() {
-    if (!images.length) return;
+    if (!images.length) {
+      toast.error("Please upload at least one image before attaching.", {
+        icon: <XCircle className="w-5 h-5 text-red-600" />,
+      });
+      return;
+    }
+    
+    // Check if price is still the initial value
+    const priceValue = typeof price === "string" ? price : String(price);
+    if (priceValue === INITIAL_PRICE || priceValue === "0" || priceValue === "" || Number(priceValue) === 0) {
+      toast.error("Please change the price from the initial value before attaching the listing.", {
+        icon: <XCircle className="w-5 h-5 text-red-600" />,
+      });
+      return;
+    }
+    
     setAttached(true);
     setAttachedCount(images.length);
   }
@@ -1142,6 +1158,15 @@ function AttachListingContent() {
                 // Validate images before publishing
                 if (!images || images.length === 0) {
                   toast.error("Please upload at least one image before publishing.", {
+                    icon: <XCircle className="w-5 h-5 text-red-600" />,
+                  });
+                  return;
+                }
+
+                // Validate price has been changed from initial value
+                const priceValue = typeof price === "string" ? price : String(price);
+                if (priceValue === INITIAL_PRICE || priceValue === "0" || priceValue === "" || Number(priceValue) === 0) {
+                  toast.error("Please change the price from the initial value before publishing the listing.", {
                     icon: <XCircle className="w-5 h-5 text-red-600" />,
                   });
                   return;

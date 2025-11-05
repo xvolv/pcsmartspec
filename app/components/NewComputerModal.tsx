@@ -197,6 +197,14 @@ export default function NewComputerModal({
       });
       return;
     }
+    // Validate price - must be provided and greater than 0
+    const priceValue = Number(uPrice || 0);
+    if (!uPrice || uPrice.trim() === "" || priceValue === 0 || isNaN(priceValue)) {
+      toast.error("Please enter a valid price before posting the listing", {
+        icon: <AlertCircle className="w-5 h-5 text-yellow-600" />,
+      });
+      return;
+    }
     const specsString = buildSpecsString(uSpecs);
     const computedName = [uSpecs.brand, series, model]
       .filter(Boolean)
@@ -1122,7 +1130,7 @@ export default function NewComputerModal({
             type="button"
             className="rounded-xl bg-black px-6 py-3 text-white font-medium hover:shadow-lg hover:scale-105 transition disabled:opacity-60 disabled:cursor-not-allowed"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); addAndClose(); }}
-            disabled={!uSpecs.brand || uImages.length === 0 || saving}
+            disabled={!uSpecs.brand || uImages.length === 0 || saving || !uPrice || uPrice.trim() === "" || Number(uPrice || 0) === 0}
           >
             <i className="fa-solid fa-plus mr-2" />
             {saving ? 'Saving…' : 'Add Device'}
